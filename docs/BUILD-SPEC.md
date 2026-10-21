@@ -30,15 +30,21 @@ No npm dependencies. Node 20+ stdlib only.
 ## Content contract (src/data.json)
 
 ```
-course: { title, subtitle, note, howto: [string] }
+course: { title, subtitle, note, source, howto: [string] }
+phases: [{ id, label, note }]
 modules: [{
-  id, num, title, kicker, goal,
+  id, num, title, kicker, goal, phase, weeks,
   lesson: [{t:"p"|"h"|"ul"|"code"|"note", x: string | [string]}],
   text?: {title, body},              // sample passage, shown in a distinct panel
   instructions: [string],            // MUST render BEFORE the graded items
   exercises: [ <exercise> ]
 }]
 ```
+
+`module.phase` matches one of `phases[].id`. `module.weeks` is a short label such as
+`Weeks 3-4`. Both must be rendered (see UI contract), because the course is a phased
+curriculum and a flat module list loses that structure.
+
 
 Exercise shapes (exactly these fields, exactly these type names):
 
@@ -147,9 +153,12 @@ so the page survives a short viewport without collapsing.
 
 Rail:
 
-- "Overview" entry, then one entry per module: two-digit number, title, and a mastery meter
-  made of 8 segments (`.on` for filled). Mastery = mean of `best` over that module's
-  exercises, rounded to the nearest 1/8 for the meter and shown as a percentage.
+- "Overview" entry, then the modules GROUPED BY PHASE: a phase header (label plus note,
+  small caps, not clickable) followed by that phase's module entries. The grouping must come
+  from `module.phase`, never from array order assumptions.
+- One entry per module: two-digit number, title, and a mastery meter made of 8 segments
+  (`.on` for filled). Mastery = mean of `best` over that module's exercises, rounded to the
+  nearest 1/8 for the meter and shown as a percentage.
 - Then "Review (n)" where n = exercises with best < 1, and "Error log (n)".
 - Footer: export, import, reset (reset asks for confirmation).
 - Current view highlighted with `aria-current="page"`.
@@ -158,13 +167,16 @@ Overview view:
 
 - Course title and subtitle.
 - "How this works" list from `course.howto`.
-- Stats row: items solved x/28, mean mastery %, items attempted, weakest part.
-- Module cards grid: number, title, kicker, goal, mastery %, "Open" button. Card shows
-  "Not started" when attempts are 0.
+- Stats row: items solved out of the total exercise count (computed from the data, never
+  hardcoded), mean mastery %, items attempted, weakest part.
+- "Source" line: `course.source` as plain text, small.
+- Module cards grouped under their phase headings: number, title, kicker, goal, mastery %,
+  "Open" button. Card shows "Not started" when attempts are 0.
 
 Module view, top to bottom:
 
-1. `kicker` (small label), `title` (h1), `goal` (subline).
+1. `kicker` (small label), `title` (h1), `goal` (subline), and a meta line showing the phase
+   label plus `weeks`.
 2. Lesson blocks by type: `p` paragraph, `h` h2, `ul` list, `code` pre with copy button,
    `note` callout.
 3. Sample text panel when `text` exists: labelled "Sample text", monospace body, visually

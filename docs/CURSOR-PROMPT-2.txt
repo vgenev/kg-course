@@ -1,0 +1,20 @@
+Follow-up build on the same repo. src/data.json has been REPLACED with the real curriculum (13 modules, 44 graded items), and docs/BUILD-SPEC.md has been amended. Read the amended "Content contract" and "UI contract" sections before editing.
+
+What changed in the data:
+- New top-level `phases: [{id,label,note}]` array.
+- Every module now has `phase` (one of the phase ids) and `weeks` (a short label).
+- `course.source` string added.
+- Modules renamed/reordered to a 13-part, 4-phase curriculum. Exercise ids and shapes are unchanged.
+
+Required changes (only these):
+1. Rail: group module entries under a phase header (label + note, small caps, not clickable). Group by `module.phase` against the `phases` array order, not by assuming array adjacency. Keep the mastery meter per module as specified.
+2. Overview: group the module cards under phase headings; add a small "Source" line rendering `course.source`; compute the "items solved" total from the data (never a hardcoded number).
+3. Module view: the meta line under the goal shows the phase label and `weeks`.
+4. Keep the Instructions panel immediately before the first exercise. This is the one layout rule that must not drift.
+5. Any place that counted modules or exercises with a hardcoded number must now derive it from the data.
+
+Do not: edit src/data.json content, change grading logic, add dependencies, or restyle the whole app. Match the existing palette and radii.
+
+Then: run `npm test` and `node build.mjs`, confirm the built file renders 13 modules and 4 phase groups (a small node check against the data is fine), and commit with the message "kg-course: phase-grouped navigation for the 4-phase curriculum".
+
+Report the exact test output, the build size, and the phase/module counts you verified.

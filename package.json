@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Interactive knowledge-graph course: lessons, sample texts, graded items with correction.",
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.cjs",
     "build": "node build.mjs"
   }
 }
