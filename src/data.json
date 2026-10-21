@@ -1,0 +1,1108 @@
+{
+  "course": {
+    "title": "Knowledge Graphs",
+    "subtitle": "Field course. Model, extract, resolve, validate, query, measure.",
+    "note": "Nine modules, 28 graded items. Every wrong answer comes with the correction and the reason. Progress stays on this machine unless you export it.",
+    "howto": [
+      "Each part is a short lesson, a sample text when the part needs one, instructions, then graded items. Jump anywhere from the left rail.",
+      "Wrong answers are the point. Every item returns the correction, the reason, and what your specific answer got wrong. Your best score per item is kept; every miss is kept in the error log.",
+      "Part mastery is the average of your best scores. Anything below a perfect score lands in Review, where you can drill it.",
+      "Progress lives in this browser only. Export it before clearing site data or switching machine."
+    ]
+  },
+  "modules": [
+    {
+      "id": "m1",
+      "num": 1,
+      "title": "The graph is the model",
+      "kicker": "Nodes, edges, literals",
+      "goal": "Read a claim and say what its nodes, edges and literals are.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "A knowledge graph is not a picture of facts. It is a schema plus a set of statements you can check, join and correct. Three carriers hold everything: the entity (a node), the relation type (a labelled, directed edge), and the value (a literal, or another node)."
+        },
+        {
+          "t": "h",
+          "x": "One fact, two serializations"
+        },
+        {
+          "t": "code",
+          "x": "(Mira Kolar :Person) --works_at--> (Vantor Labs :Organisation)\n(Mira Kolar) --role--> \"head of hardware\"\n(Mira Kolar) --started--> \"2024-03-01\""
+        },
+        {
+          "t": "p",
+          "x": "RDF is the W3C form: subject, predicate, object. Edges are bare triples and cannot carry their own fields, so a qualified fact must be promoted to a node or reified. A property graph (Neo4j, Kuzu, Memgraph) lets nodes and edges hold key and value properties. Convenient, less portable."
+        },
+        {
+          "t": "note",
+          "x": "Decision rule: keep a claim as an edge while it is a single unqualified statement. The moment it needs a date, a role, a source or a confidence, the relation becomes a node."
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Node: a thing you can point at twice, with an identity of its own",
+            "Edge: a typed, directed claim between two nodes",
+            "Literal: a value with no identity (a date, a number, a string)"
+          ]
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m1e1",
+          "type": "mcq",
+          "prompt": "Which claim cannot be stored as one plain triple without losing information?",
+          "options": [
+            "Vantor Labs is located in Nis.",
+            "Mira Kolar was head of hardware at Vantor Labs from March 2024 to August 2025.",
+            "Vantor Labs supplies Zarya Energy.",
+            "Kestrel Robotics builds grippers."
+          ],
+          "answer": 1,
+          "why": "That claim carries three qualifiers: role, start, end. A triple holds one relation and nothing else, so two of the three qualifiers would be dropped. Qualifiers are exactly what force an event node or a reified statement.",
+          "wrong": [
+            "One edge, one city. No qualifier, so nothing is lost.",
+            "",
+            "One edge, one supplier. Clean.",
+            "One edge. You would only need more structure if you wanted 'since 2019'."
+          ]
+        },
+        {
+          "id": "m1e2",
+          "type": "categorize",
+          "prompt": "Split the sentence into the slot each piece belongs to: 'Mira Kolar joined Vantor Labs in March 2024.'",
+          "buckets": [
+            "Node (entity)",
+            "Edge (relation type)",
+            "Literal (value)"
+          ],
+          "items": [
+            {
+              "text": "Mira Kolar",
+              "bucket": 0,
+              "note": "A person with identity. Every future fact about her reuses this same node."
+            },
+            {
+              "text": "joined",
+              "bucket": 1,
+              "note": "A schema-level verb. Normalize it to a relation type such as works_at, not the surface word 'joined', or the same relation will fragment across documents."
+            },
+            {
+              "text": "March 2024",
+              "bucket": 2,
+              "note": "A time value with no identity. Store it typed (ISO date), never as a node per month."
+            },
+            {
+              "text": "Vantor Labs",
+              "bucket": 0,
+              "note": "An organisation node. It is what the edge points at, not the edge itself."
+            }
+          ],
+          "why": "Nodes are things with identity, edges are the schema's verbs, literals are values. Confusing a verb with a node is the most common structural error in LLM extraction output."
+        },
+        {
+          "id": "m1e3",
+          "type": "mcq",
+          "prompt": "In a property graph you want to record that the employment started in 2024. What is available to you?",
+          "options": [
+            "Attach a start property to the works_at edge.",
+            "Nothing. Graph edges are always untyped.",
+            "Only RDF reification, because edges are immutable.",
+            "Split the person into one node per year."
+          ],
+          "answer": 0,
+          "why": "Property graphs allow properties on nodes and on edges. That is why they are popular for operational data. The catch: that edge property does not survive a move to plain RDF, where the whole relation must be reified.",
+          "wrong": [
+            "",
+            "Edges are labelled, so they are typed. What a property graph edge cannot do is carry a second relation.",
+            "Reification exists because RDF edges are bare triples. A property graph does not need it.",
+            "That fragments one identity into many and breaks every join on the person."
+          ]
+        },
+        {
+          "id": "m1e4",
+          "type": "order",
+          "prompt": "Order the pipeline from raw text to a queryable graph.",
+          "items": [
+            "Extract candidate entities and relations",
+            "Resolve mentions to canonical entities",
+            "Type them against the ontology",
+            "Validate constraints and provenance",
+            "Load into the graph store"
+          ],
+          "why": "Extraction, then resolution, then typing. Typing before resolution duplicates the same type across alias variants and you end up validating two half-people. Loading is last because a graph store accepts anything you give it."
+        }
+      ],
+      "instructions": [
+        "Read the lesson first. The four items check four separate ideas: what forces a relation to become a node, which slot a piece of a sentence belongs to, what a property-graph edge can hold, and the order of the pipeline.",
+        "Multiple choice: one click answers and locks the item. You cannot change an answer after clicking, but you can retry the item afterwards.",
+        "Sorting: pick a bucket for every card, then press Check. Nothing is scored until you press Check.",
+        "Ordering: click the steps in the order you think is correct. Click a step already in the sequence to take it back out.",
+        "Grading: multiple choice and ordering are all or nothing. Sorting gives partial credit per correct card."
+      ]
+    },
+    {
+      "id": "m2",
+      "num": 2,
+      "title": "Reading text into triples",
+      "kicker": "The extraction seat",
+      "goal": "Turn a paragraph into a small, defensible set of triples.",
+      "text": {
+        "title": "Passage A",
+        "body": "In March 2024 Mira Kolar joined Vantor Labs as head of hardware. Vantor runs two robotic cell lines in Nis and supplies them to Zarya Energy, a battery maker in Plovdiv. Before that, Kolar led the gripper programme at Kestrel Robotics."
+      },
+      "lesson": [
+        {
+          "t": "p",
+          "x": "Extraction is a decision about what the source actually asserts. Three of the four sentences carry facts. Every triple you write should trace to a span you could highlight."
+        },
+        {
+          "t": "h",
+          "x": "What a good first pass looks like"
+        },
+        {
+          "t": "code",
+          "x": "mira_kolar | works_at | vantor_labs\nmira_kolar | role | \"head of hardware\"\nvantor_labs | located_in | nis\nvantor_labs | supplies | zarya_energy\nmira_kolar | worked_at | kestrel_robotics"
+        },
+        {
+          "t": "p",
+          "x": "Note what is absent. The count of cell lines, the two city mentions and the word 'previously' are not separate triples. Numbers and dates belong on a role or an event, not floating as their own claims. And Zarya being 'a battery maker in Plovdiv' is two claims, not one: a type and a location."
+        },
+        {
+          "t": "note",
+          "x": "The eval question for any extraction pass is not 'does it look right' but 'can I point at the sentence for each triple, and is anything in the gold set missing'."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m2e1",
+          "type": "triples",
+          "prompt": "Write the five core facts from Passage A as triples, one per line.",
+          "format": "subject | predicate | object",
+          "example": "some_entity | some_relation | another_entity",
+          "expected": [
+            {
+              "s": [
+                "mira kolar",
+                "mira",
+                "kolar"
+              ],
+              "p": [
+                "works at",
+                "works for",
+                "joined",
+                "employed by",
+                "employee of",
+                "worked at"
+              ],
+              "o": [
+                "vantor labs",
+                "vantor"
+              ]
+            },
+            {
+              "s": [
+                "mira kolar",
+                "mira",
+                "kolar"
+              ],
+              "p": [
+                "role",
+                "has role",
+                "title",
+                "job title",
+                "position"
+              ],
+              "o": [
+                "head of hardware"
+              ]
+            },
+            {
+              "s": [
+                "vantor labs",
+                "vantor"
+              ],
+              "p": [
+                "located in",
+                "based in",
+                "operates in",
+                "has site in",
+                "site in"
+              ],
+              "o": [
+                "nis"
+              ]
+            },
+            {
+              "s": [
+                "vantor labs",
+                "vantor"
+              ],
+              "p": [
+                "supplies",
+                "supplier of",
+                "supplies to",
+                "sells to",
+                "customer of"
+              ],
+              "o": [
+                "zarya energy",
+                "zarya"
+              ]
+            },
+            {
+              "s": [
+                "mira kolar",
+                "mira",
+                "kolar"
+              ],
+              "p": [
+                "worked at",
+                "previously worked at",
+                "worked for",
+                "led programme at",
+                "led program at",
+                "employed at",
+                "former employee of"
+              ],
+              "o": [
+                "kestrel robotics",
+                "kestrel"
+              ]
+            }
+          ],
+          "why": "Five assertions, five triples. If you wrote a triple about 'two cell lines' or 'battery maker', check what it would mean when queried: a count is a property of a fleet, and 'battery maker' is a type, not a relation.",
+          "hint": "Lowercase, one fact per line. Predicates are free-form but must be a verb, not a class name."
+        },
+        {
+          "id": "m2e2",
+          "type": "multi",
+          "prompt": "Which of these are legitimate triples for Passage A?",
+          "options": [
+            "vantor_labs | supplies | zarya_energy",
+            "zarya_energy | supplies | vantor_labs",
+            "mira_kolar | worked_at | kestrel_robotics",
+            "vantor_labs | located_in | nis",
+            "mira_kolar | founded | vantor_labs"
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "notes": [
+            "Stated directly: Vantor supplies the cell lines to Zarya.",
+            "'Supplies' runs one way. Inverting it asserts the opposite business relationship.",
+            "Stated: Kolar led the gripper programme at Kestrel. Model the past employer as a distinct relation or qualify it with dates.",
+            "Stated: the cell lines are in Nis.",
+            "Never asserted. An extractor that adds 'founded' because founders are common is hallucinating a relation."
+          ],
+          "why": "Three supported, two invented. Inverted direction and unsupported predicates are the two failure modes that survive review longest, because both read plausibly."
+        },
+        {
+          "id": "m2e3",
+          "type": "mcq",
+          "prompt": "Your extractor returns zarya_energy | battery_maker | plovdiv. What is wrong with it?",
+          "options": [
+            "battery_maker is a class, not a relation. The sentence holds two claims: Zarya is a BatteryMaker, and Zarya is located in Plovdiv.",
+            "Plovdiv should be a literal, so the triple is fine as written.",
+            "Nothing. It records the same information as the sentence.",
+            "The direction is inverted."
+          ],
+          "answer": 0,
+          "why": "A predicate has to be a relation type from the schema. 'battery_maker' is a type assertion wearing a predicate costume, and it silently fuses 'what Zarya is' with 'where Zarya is'. Every query for suppliers in Plovdiv now misses it.",
+          "wrong": [
+            "",
+            "Making the city a literal would not fix the predicate. The real defect is two claims collapsed into one edge.",
+            "It records a relationship the text never states, and destroys both real claims.",
+            "Direction is fine. The predicate itself is not a relation."
+          ]
+        }
+      ],
+      "instructions": [
+        "Passage A is the only source. Do not add facts from the world, even true ones. These items score what the passage asserts, not what you know.",
+        "Answer format: one triple per line, three fields separated by a pipe. Example: mira_kolar | works_at | vantor_labs",
+        "Write exactly five lines on the first item. Case, underscores, hyphens and diacritics are ignored, so Nis matches Nis.",
+        "Predicates are matched against a short synonym list. works_at, works for and joined all count for the same relation.",
+        "Grading: each expected triple you match is worth a fifth. Every extra line you cannot match costs half a fifth, so padding with guesses lowers your score."
+      ]
+    },
+    {
+      "id": "m3",
+      "num": 3,
+      "title": "Mentions, aliases, pronouns",
+      "kicker": "Who is she",
+      "goal": "Map surface mentions onto exactly one identity, and know when not to.",
+      "text": {
+        "title": "Passage B",
+        "body": "Kolar's team at Vantor shipped the first cell in June 2024; it cut assembly time by 38 percent. She now reports to the COO, Dario Vuk. Vuk also sits on the board of Zarya."
+      },
+      "lesson": [
+        {
+          "t": "p",
+          "x": "The text says 'Kolar' once and 'Vantor' once. Links, signatures, PDFs, chats and support tickets all name the same things differently. Mention is the string in the document. Entity is the identity. A graph needs the identity."
+        },
+        {
+          "t": "h",
+          "x": "Three layers of normalization"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Surface: 'Kolar', 'M. Kolar', 'Dr. Kolar' in one paragraph",
+            "Alias: a table of known strings for one identity, with a source",
+            "Canonical id: one stable key the whole graph points at"
+          ]
+        },
+        {
+          "t": "p",
+          "x": "Pronouns are the same problem with less evidence. 'It' can attach to the team, the cell or the company, and only one resolution keeps the numbers coherent. Resolve to the nearest antecedent whose type fits the predicate you are about to write."
+        },
+        {
+          "t": "note",
+          "x": "Rule: never merge on string equality alone, and never merge on first token alone. 'Vantor Labs' and 'Vantor Systems' are one token apart and different companies."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m3e1",
+          "type": "mcq",
+          "prompt": "In Passage B, what does 'it' refer to in 'it cut assembly time by 38 percent'?",
+          "options": [
+            "The first cell",
+            "Kolar's team",
+            "Vantor Labs",
+            "June 2024"
+          ],
+          "answer": 0,
+          "why": "An assembly time is reduced by a thing that assembles. The cell is the only antecedent whose type fits the metric. Resolving to the team would create a fact about a team's performance that the text never claims.",
+          "wrong": [
+            "",
+            "A team does not have an assembly time. Type mismatch is the signal here.",
+            "A company does not assemble in the sentence; it owns the line.",
+            "A date cannot reduce anything."
+          ]
+        },
+        {
+          "id": "m3e2",
+          "type": "multi",
+          "prompt": "From Passage B, which values should stay literals rather than become nodes?",
+          "options": [
+            "38 percent",
+            "June 2024",
+            "Dario Vuk",
+            "Vantor Labs"
+          ],
+          "answers": [
+            0,
+            1
+          ],
+          "notes": [
+            "A quantity with a unit. Literal typed as a number plus a unit, never a node named '38 percent'.",
+            "A date. Typed literal (ISO), so range queries and sorting work.",
+            "A person mentioned by name, with a role. That is an entity.",
+            "An organisation you will want to join other facts onto. Entity."
+          ],
+          "why": "Literals are values you filter and sort; nodes are things you join through. Promoting a date to a node because 'everything is a node' breaks comparison and duplicates the calendar."
+        },
+        {
+          "id": "m3e3",
+          "type": "mcq",
+          "prompt": "Three documents write 'Vantor', 'Vantor Labs' and 'VANTOR LABS d.o.o.'. What is the correct first move?",
+          "options": [
+            "Create one canonical entity id, add all three strings as aliases with their source document, then merge candidates by a blocking key.",
+            "Merge any string that shares the first token, then review later.",
+            "Keep three separate nodes. Merging is always riskier than splitting.",
+            "Concatenate the three strings into the node label so nothing is lost."
+          ],
+          "answer": 0,
+          "why": "Alias table plus canonical id is reversible and auditable. Blocking (normalized legal name, country) keeps the candidate set small enough to score, and the source on each alias is what lets you undo a bad merge later.",
+          "wrong": [
+            "",
+            "First-token merging splits 'Vantor Labs' from 'Vantor Systems' at exactly the wrong place. It is the classic false merge.",
+            "Splitting is not free either: downstream facts attach to three nodes and the graph answers 'who supplies Zarya' three times, once.",
+            "A concatenated label is not an identity. It destroys the evidence and still leaves you unable to join."
+          ]
+        }
+      ],
+      "instructions": [
+        "Passage B is the source. Two items are about identity and one is about what should never become a node.",
+        "For the multiple-select item: select everything that must stay a value, then press Check. Partial credit; each wrong selection cancels one right one.",
+        "For the references item: pick the resolution that keeps the numbers in the passage coherent.",
+        "Grading: multiple choice is all or nothing. Multiple select is partial."
+      ]
+    },
+    {
+      "id": "m4",
+      "num": 4,
+      "title": "Schema before extraction",
+      "kicker": "Classes, properties, domain and range",
+      "goal": "Write the few constraints that stop extraction from inventing structure.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "An ontology is small and boring: a handful of classes, a handful of relations, and for each relation a domain (what the subject must be) and a range (what the object must be). That is enough to reject most bad triples automatically."
+        },
+        {
+          "t": "code",
+          "x": "Class:   Person, Organisation, City, Employment\nProperty: works_at   domain Person   range Organisation\nProperty: located_in domain Organisation range City\nProperty: supplies   domain Organisation range Organisation"
+        },
+        {
+          "t": "h",
+          "x": "Why schema first"
+        },
+        {
+          "t": "p",
+          "x": "Free-form extraction produces 'employed_by', 'works for', 'employee at' and 'is employed by' for one relation, and your graph fractures into four. A closed list of relation types, given to the extractor up front, is the cheapest quality control you will ever add. It also makes the violation check possible: a works_at whose subject is an Organisation is wrong on its face."
+        },
+        {
+          "t": "note",
+          "x": "Keep the ontology in version control next to the extractor prompt. An ontology change is a data migration, not a config tweak."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m4e1",
+          "type": "categorize",
+          "prompt": "Sort at the schema level: which of these are classes, which are instances, which are properties?",
+          "buckets": [
+            "Class",
+            "Instance",
+            "Property"
+          ],
+          "items": [
+            {
+              "text": "Person",
+              "bucket": 0,
+              "note": "A type. Many people are instances of it."
+            },
+            {
+              "text": "Mira Kolar",
+              "bucket": 1,
+              "note": "One person. An instance of Person."
+            },
+            {
+              "text": "works_at",
+              "bucket": 2,
+              "note": "A relation type. Lives in the schema, not in the data."
+            },
+            {
+              "text": "Organisation",
+              "bucket": 0,
+              "note": "A type, the range of works_at."
+            },
+            {
+              "text": "Vantor Labs",
+              "bucket": 1,
+              "note": "One organisation, instance of Organisation."
+            }
+          ],
+          "why": "Schema (classes, properties) and data (instances) are different layers with different lifecycles. Mixing them is how you get a 'Person' node that is also someone's employer."
+        },
+        {
+          "id": "m4e2",
+          "type": "mcq",
+          "prompt": "works_at has domain Person and range Organisation. Which triple violates the schema?",
+          "options": [
+            "vantor_labs | works_at | mira_kolar",
+            "mira_kolar | works_at | vantor_labs",
+            "mira_kolar | knows | dario_vuk",
+            "vantor_labs | supplies | zarya_energy"
+          ],
+          "answer": 0,
+          "why": "It swaps both ends: subject is an Organisation where a Person is required, object is a Person where an Organisation is required. A domain and range check rejects it at load time with no model involved.",
+          "wrong": [
+            "",
+            "Subject is a Person, object an Organisation. Valid.",
+            "knows is a different property with its own domain and range, both Person. Not a works_at claim.",
+            "supplies is Organisation to Organisation. Valid."
+          ]
+        },
+        {
+          "id": "m4e3",
+          "type": "triples",
+          "prompt": "Declare the constraint as two triples, using the property works_at.",
+          "format": "property | domain or range | class",
+          "example": "works_at | domain | Person",
+          "expected": [
+            {
+              "s": [
+                "works at",
+                "works_at",
+                "worksat"
+              ],
+              "p": [
+                "domain",
+                "has domain",
+                "rdfs domain"
+              ],
+              "o": [
+                "person"
+              ]
+            },
+            {
+              "s": [
+                "works at",
+                "works_at",
+                "worksat"
+              ],
+              "p": [
+                "range",
+                "has range",
+                "rdfs range"
+              ],
+              "o": [
+                "organisation",
+                "organization",
+                "org"
+              ]
+            }
+          ],
+          "why": "Domain and range are themselves triples in RDF Schema, which is why the ontology is data you can query and version, not code buried in the loader.",
+          "hint": "Two lines. One for domain, one for range."
+        }
+      ],
+      "instructions": [
+        "Three items: sort terms at the schema level, find the constraint violation, then declare a constraint yourself.",
+        "Answer format for the last item: property | domain or range | class, two lines only.",
+        "The sort gives partial credit per card. The other two are all or nothing.",
+        "If a term could plausibly be two things, use the role it plays in the small ontology printed above the items."
+      ]
+    },
+    {
+      "id": "m5",
+      "num": 5,
+      "title": "Qualified facts and events",
+      "kicker": "When a relation needs a CV",
+      "goal": "Recognize an n-ary fact and promote it to a node without losing meaning.",
+      "text": {
+        "title": "Passage C",
+        "body": "From March 2024 to August 2025, Mira Kolar was head of hardware at Vantor Labs, with a 12 percent equity stake vesting over four years."
+      },
+      "lesson": [
+        {
+          "t": "p",
+          "x": "Most real facts are qualified: who, what, when, in what role, according to which document, at what confidence. A triple can hold one of those. The standard fix is to make the relation itself a node, an event or role record, and hang the qualifiers on it."
+        },
+        {
+          "t": "h",
+          "x": "Two ways out"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Event node: employment_1 is an Employment, with person, organisation, role, start, end, stake. Portable, queryable, boring, correct.",
+            "RDF-star: annotate the triple directly with << mira_kolar works_at vantor_labs >> {| start 2024-03 |}. Compact, but support is uneven across stores."
+          ]
+        },
+        {
+          "t": "code",
+          "x": "employment_1 | type         | Employment\nemployment_1 | person       | mira_kolar\nemployment_1 | organisation | vantor_labs\nemployment_1 | role         | \"head of hardware\"\nemployment_1 | start        | \"2024-03-01\"\nemployment_1 | end          | \"2025-08-31\""
+        },
+        {
+          "t": "note",
+          "x": "In a property graph you can skip the event node and put start, end and role on the edge. Do that only if you will never need to query the employment as a thing (for example, to attach a contract document to it)."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m5e1",
+          "type": "mcq",
+          "prompt": "You must publish Passage C as plain RDF, with no RDF-star. Which model keeps the fact intact?",
+          "options": [
+            "An Employment event node carrying person, organisation, role, start, end, stake.",
+            "One triple mira_kolar works_at vantor_labs, plus a note in the label.",
+            "Three triples, one per qualifier, all pointing at mira_kolar.",
+            "Four edges from mira_kolar to each value with the same predicate."
+          ],
+          "answer": 0,
+          "why": "Six facts share one subject and one relation. Without annotations, the only lossless shape is to make the relation a node so the qualifiers have somewhere to attach.",
+          "wrong": [
+            "",
+            "Five facts become zero: the date range, the role and the stake all vanish, and nothing warns you.",
+            "Qualifiers hanging off the person are claims about the person forever, not about the employment. When she changes role the history is wrong.",
+            "Same problem with a different shape, plus you now cannot tell which value belongs to which predicate."
+          ]
+        },
+        {
+          "id": "m5e2",
+          "type": "triples",
+          "prompt": "Write the four core triples of the employment event. Use the id employment_1.",
+          "format": "employment_1 | field | value",
+          "example": "employment_1 | role | head of hardware",
+          "expected": [
+            {
+              "s": [
+                "employment 1",
+                "employment1"
+              ],
+              "p": [
+                "type",
+                "rdf type",
+                "is a",
+                "instance of",
+                "class"
+              ],
+              "o": [
+                "employment",
+                "employment event",
+                "role",
+                "role record"
+              ]
+            },
+            {
+              "s": [
+                "employment 1",
+                "employment1"
+              ],
+              "p": [
+                "person",
+                "employee",
+                "subject",
+                "who"
+              ],
+              "o": [
+                "mira kolar",
+                "mira",
+                "kolar"
+              ]
+            },
+            {
+              "s": [
+                "employment 1",
+                "employment1"
+              ],
+              "p": [
+                "organisation",
+                "organization",
+                "employer",
+                "org",
+                "at",
+                "company"
+              ],
+              "o": [
+                "vantor labs",
+                "vantor"
+              ]
+            },
+            {
+              "s": [
+                "employment 1",
+                "employment1"
+              ],
+              "p": [
+                "role",
+                "title",
+                "position",
+                "job title"
+              ],
+              "o": [
+                "head of hardware"
+              ]
+            }
+          ],
+          "why": "Four core fields: what the node is, who, where, in what capacity. Start, end and stake are the same pattern and belong on the same node. The tell that you did this right is that 'what was her role in 2024' is a two-hop query, not a guess.",
+          "hint": "The event node is the subject of all four lines."
+        },
+        {
+          "id": "m5e3",
+          "type": "mcq",
+          "prompt": "Which statement about RDF reification and RDF-star is accurate?",
+          "options": [
+            "Classic reification turns a statement into a resource with four extra triples; RDF-star lets you annotate a triple directly.",
+            "RDF-star is a newer name for classic reification and produces the same triples.",
+            "Classic reification adds semantics that query engines must honour as constraints.",
+            "RDF-star removes the need for a schema."
+          ],
+          "answer": 0,
+          "why": "Reification creates a statement resource (subject, predicate, object, statement) so you can hang annotations on it. RDF-star quotes the triple inline. The first is verbose and widely supported; the second is compact and unevenly supported.",
+          "wrong": [
+            "",
+            "Different mechanisms. One creates four extra triples per statement; the other adds none.",
+            "Reification has no formal semantics beyond 'these four triples describe a statement'. Nothing is enforced.",
+            "Star changes syntax for annotations, not the need for an ontology."
+          ]
+        }
+      ],
+      "instructions": [
+        "Passage C is a qualified fact: six claims hang off one relation. You are not extracting it, you are modelling it.",
+        "The triples item expects the four core fields of the event node, using the exact id employment_1. Field names in lower case: type, person, organisation, role.",
+        "Start and end dates, the equity stake and the contract document are the same pattern and belong on the same node. They are not required in the answer.",
+        "Grading: a quarter per correct field. Extra lines cost half a quarter each."
+      ]
+    },
+    {
+      "id": "m6",
+      "num": 6,
+      "title": "Entity resolution",
+      "kicker": "Same thing, two spellings",
+      "goal": "Merge conservatively, at a threshold you can defend, with a path back.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "Entity resolution is where graphs are won or lost. Two error classes, and they are not symmetric. A missed merge leaves duplicate nodes: annoying, visible, fixable. A false merge welds two real things into one, and every fact you later attach to that node is contaminated. Un-merging means replaying history."
+        },
+        {
+          "t": "h",
+          "x": "The workable shape"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Normalize: case, legal suffixes (ltd, d.o.o., gmbh), punctuation, diacritics",
+            "Block: candidate pairs by a cheap key (normalized name prefix plus country)",
+            "Score: name similarity plus shared facts (same city, same domain, same people)",
+            "Decide: auto-merge high, auto-reject low, send the band in between to a human with the evidence"
+          ]
+        },
+        {
+          "t": "note",
+          "x": "Never auto-merge on a name alone when the name is a single common token. 'Zarya' is a person, a company, a satellite programme and a ship."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m6e1",
+          "type": "multi",
+          "prompt": "Which pairs are plausibly the same entity?",
+          "options": [
+            "Vantor Labs / VANTOR LABS d.o.o.",
+            "Mira Kolar / M. Kolar",
+            "Zarya Energy / Zarya Energy Ltd",
+            "Kestrel Robotics / Kestrel Systems"
+          ],
+          "answers": [
+            0,
+            1,
+            2
+          ],
+          "notes": [
+            "Same name, different case, plus a legal form. Normalizing the legal suffix collapses them.",
+            "Initial plus surname in the same document cluster. High confidence together with a shared employer.",
+            "Legal suffix only. This is the easy class of match.",
+            "Different second token and a different legal entity. 'Robotics' and 'Systems' are not variants, they are two companies. Merge these and you never find out."
+          ],
+          "why": "The first three differ by formatting. The fourth differs by a discriminating token, which is exactly the boundary a first-token matcher gets wrong."
+        },
+        {
+          "id": "m6e2",
+          "type": "mcq",
+          "prompt": "Your matcher auto-merges 1,200 pairs and 180 of them are wrong. Which change is most defensible?",
+          "options": [
+            "Raise the auto-merge threshold and route the 0.75 to 0.95 band to human review with evidence attached.",
+            "Lower the threshold so recall improves, then clean up later.",
+            "Drop name matching and merge only on shared identifiers.",
+            "Keep merging and log the errors."
+          ],
+          "answer": 0,
+          "why": "Fifteen percent wrong at auto-merge is a contamination rate, not a tuning annoyance. A review band converts the ambiguous middle into decisions, keeps the confident merges automatic, and produces the labelled pairs you need to tune at all.",
+          "wrong": [
+            "",
+            "Lowering the threshold raises recall and raises the contamination rate. False merges are the expensive direction.",
+            "Shared identifiers are the right signal but rare. You would lose most true matches, and the graph would fragment.",
+            "Logging does not stop the damage. Every downstream fact attached to a bad node must be replayed after the fix."
+          ]
+        },
+        {
+          "id": "m6e3",
+          "type": "cloze",
+          "prompt": "Fill the blank with the error type you should prefer to make.",
+          "sentence": "Because a merged pair is expensive to undo once facts attach to it, when the matcher is unsure the cheap error is a ______ rather than a false merge.",
+          "blanks": [
+            {
+              "accept": [
+                "missed merge",
+                "false negative",
+                "missing merge",
+                "miss",
+                "split",
+                "under merge",
+                "undermerge",
+                "false split"
+              ],
+              "note": "A missed merge leaves two nodes that can be linked later. A false merge poisons one node and every edge on it."
+            }
+          ],
+          "why": "Asymmetric cost. Duplicates are a cleanup job; contamination is a replay job. Tune the threshold toward precision on merges and accept visible duplicates."
+        }
+      ],
+      "instructions": [
+        "Entity resolution is about asymmetric cost: one direction of error is a cleanup, the other is a replay.",
+        "For the pairs item: select every pair you would merge automatically. Do not select a pair you would only send to review.",
+        "Grading: pairs are partial, with each wrong selection cancelling a right one. The policy item and the fill-in are all or nothing."
+      ]
+    },
+    {
+      "id": "m7",
+      "num": 7,
+      "title": "Validation and provenance",
+      "kicker": "What the graph must prove",
+      "goal": "Define the checks that run on every load, and record where each fact came from.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "An unvalidated graph is a pile of plausible sentences. Validation is cheap and mechanical: cardinality, datatype, class membership, referential integrity. In RDF that is SHACL. In a property graph it is a constraint plus a test suite."
+        },
+        {
+          "t": "code",
+          "x": "PersonShape a sh:NodeShape ;\n  sh:targetClass :Person ;\n  sh:property [ sh:path :name ; sh:minCount 1 ; sh:maxCount 1 ;\n                sh:datatype xsd:string ] ."
+        },
+        {
+          "t": "h",
+          "x": "Provenance is part of the fact"
+        },
+        {
+          "t": "p",
+          "x": "Every triple should answer: which document, which character span, which extractor version, at what confidence, at what time. Without a span you cannot review the extraction. Without a version you cannot tell whether a quality drop came from the data or from the prompt change. When two sources contradict, provenance is the only thing that decides which one wins."
+        },
+        {
+          "t": "note",
+          "x": "Quarantine beats deletion. A triple with low confidence and no source is a question, not an error. Park it in a holding graph until a human or a better source settles it."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m7e1",
+          "type": "multi",
+          "prompt": "Which of these are real defects in a freshly loaded graph?",
+          "options": [
+            "mira_kolar has two different birth dates, from two sources.",
+            "vantor_labs is located in both Nis and Plovdiv.",
+            "A triple carries confidence 0.31 and no source span.",
+            "A supplies edge points at zarya_energy_2, a node that does not exist."
+          ],
+          "answers": [
+            0,
+            2,
+            3
+          ],
+          "notes": [
+            "Functional property with two values: either the sources conflict or one is wrong. It needs a decision, not a merge.",
+            "Legitimate. Organisations have sites. This is only a defect if the schema says located_in is functional for that class.",
+            "Unverifiable and low confidence. Quarantine it rather than shipping it to consumers.",
+            "Dangling reference. Referential integrity failure, and the cheapest class of bug to catch at load."
+          ],
+          "why": "Three defects, one legitimate pattern. Treating a multi-valued property as an error is the over-validation failure: it makes analysts disable the checks, and then nothing runs."
+        },
+        {
+          "id": "m7e2",
+          "type": "mcq",
+          "prompt": "Which SHACL construct enforces 'every Person has exactly one name'?",
+          "options": [
+            "sh:path :name with sh:minCount 1 and sh:maxCount 1 on the property shape.",
+            "sh:or over the class definition.",
+            "sh:closed true on the node shape.",
+            "sh:nodeKind sh:IRI on the name path."
+          ],
+          "answer": 0,
+          "why": "Cardinality lives on the property shape as minCount and maxCount. One each, and a datatype of xsd:string completes it.",
+          "wrong": [
+            "",
+            "sh:or combines shapes. It says nothing about how many values exist.",
+            "sh:closed forbids properties outside the declared set. Useful, but not cardinality.",
+            "nodeKind checks whether the value is an IRI or a literal, not how many there are."
+          ]
+        },
+        {
+          "id": "m7e3",
+          "type": "cloze",
+          "prompt": "Fill the missing provenance field.",
+          "sentence": "Provenance has to survive every merge and every reload: each triple records the source document, the extractor version, a confidence, and the character ______ it was taken from.",
+          "blanks": [
+            {
+              "accept": [
+                "span",
+                "offset",
+                "range",
+                "character range",
+                "position"
+              ],
+              "note": "The span is what makes the fact reviewable. Click a triple, see the sentence highlighted. Without it, 'is this extraction correct' has no answer."
+            }
+          ],
+          "why": "A triple without a span cannot be reviewed, and a fact that cannot be reviewed cannot be corrected at scale."
+        }
+      ],
+      "instructions": [
+        "Three items: what counts as a real defect, one SHACL construct, one missing provenance field.",
+        "For the defects item: select only genuine defects. A legitimate multi-valued fact is not a defect, and marking it is the specific error this item looks for.",
+        "Grading: defects are partial with cancellation, the other two are all or nothing."
+      ]
+    },
+    {
+      "id": "m8",
+      "num": 8,
+      "title": "Querying and retrieval",
+      "kicker": "Traversal beats similarity",
+      "goal": "Write the traversal you actually need, and know when a graph earns its cost.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "A graph store buys you one thing: joins along typed relations at depth. If your question is 'which suppliers of Zarya also employ someone who sat on Kestrel's board', that is two hops and a shared node. No embedding finds it, because the answer is not similar to the question, it is connected to it."
+        },
+        {
+          "t": "code",
+          "x": "MATCH (z:Organisation {name:'Zarya Energy'})<-[:SUPPLIES]-(s:Organisation)\n      -[:LOCATED_IN]->(:City {name:'Nis'})\nRETURN s.name"
+        },
+        {
+          "t": "h",
+          "x": "Graph retrieval in one line"
+        },
+        {
+          "t": "p",
+          "x": "GraphRAG pattern: link the query's entities to nodes, expand a small typed neighbourhood, rank the resulting triples by confidence and provenance, serialize that subgraph as context, and require the answer to cite the edges it used. Community summaries (Leiden over the graph) answer global questions that no single neighbourhood covers."
+        },
+        {
+          "t": "note",
+          "x": "Cheap test before building: if every real question can be answered by a single document, a graph is overhead. Graphs pay for cross-document joins and for questions about structure."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m8e1",
+          "type": "mcq",
+          "prompt": "Which query returns companies that supply Zarya Energy and are located in Nis?",
+          "options": [
+            "MATCH (z:Organisation {name:'Zarya Energy'})<-[:SUPPLIES]-(s:Organisation)-[:LOCATED_IN]->(:City {name:'Nis'}) RETURN s.name",
+            "MATCH (z:Organisation {name:'Zarya Energy'})-[:SUPPLIES]->(s:Organisation)-[:LOCATED_IN]->(:City {name:'Nis'}) RETURN s.name",
+            "MATCH (s:Organisation)-[:SUPPLIES]->(z:Organisation {name:'Zarya Energy'}) RETURN s.name",
+            "MATCH (s:Organisation)-[:LOCATED_IN]->(:City {name:'Nis'}) RETURN s.name"
+          ],
+          "answer": 0,
+          "why": "Supplier direction reversed, then the location hop. Note the arrow: Zarya is the head of the pattern because supplies points at it.",
+          "wrong": [
+            "",
+            "Same edge read forwards, which returns Zarya's own customers, not its suppliers. Direction errors are the most common Cypher bug.",
+            "Right direction, but no location filter. It returns every supplier of Zarya.",
+            "Right filter, but no connection to Zarya. It returns every company in Nis."
+          ]
+        },
+        {
+          "id": "m8e2",
+          "type": "mcq",
+          "prompt": "Which question actually justifies a knowledge graph over vector RAG?",
+          "options": [
+            "Which suppliers of Zarya Energy share a board member with Kestrel Robotics?",
+            "Summarize the main risks in this contract.",
+            "What does the documentation say about retry behaviour?",
+            "Find passages semantically similar to this paragraph."
+          ],
+          "answer": 0,
+          "why": "It is a two-hop join across documents where the answer shares no wording with the question. The other three are similarity or single-document tasks, and chunk retrieval handles them at a fraction of the cost.",
+          "wrong": [
+            "",
+            "A single document and a summarization task. A graph adds cost and no reach.",
+            "Semantic lookup over docs. Vector retrieval is the right tool.",
+            "That is the definition of what embeddings do well."
+          ]
+        },
+        {
+          "id": "m8e3",
+          "type": "order",
+          "prompt": "Order the graph retrieval steps for one user question.",
+          "items": [
+            "Link the question's entities to canonical nodes",
+            "Expand a small typed neighbourhood around them",
+            "Rank candidate triples by confidence and provenance",
+            "Serialize the subgraph as context for the model",
+            "Require the answer to cite the edges it used"
+          ],
+          "why": "Link, expand, rank, serialize, cite. Skipping the ranking step floods the context with low-confidence edges, and skipping citation makes a wrong answer indistinguishable from a right one."
+        }
+      ],
+      "instructions": [
+        "Three items: read one Cypher query, one judgement about when a graph earns its cost, one ordering.",
+        "Read arrow direction literally: (a)-[:SUPPLIES]->(b) means a supplies b. Reversing an arrow is the most common query bug.",
+        "Grading: the query and the judgement are all or nothing. The ordering is all or nothing."
+      ]
+    },
+    {
+      "id": "m9",
+      "num": 9,
+      "title": "Measuring the graph",
+      "kicker": "Precision is cheap, recall is the job",
+      "goal": "Score an extraction pass honestly, and read what the numbers mean.",
+      "lesson": [
+        {
+          "t": "p",
+          "x": "A graph has two scores and they point in opposite directions. Precision: of the triples I emitted, how many are right. Recall: of the triples that exist in the source, how many did I find. Report both or you are reporting nothing."
+        },
+        {
+          "t": "code",
+          "x": "gold set: 50 triples\nextractor emitted 40, of which 32 are correct\n\nprecision = 32 / 40 = 0.80\nrecall    = 32 / 50 = 0.64"
+        },
+        {
+          "t": "h",
+          "x": "The failure modes that survive review"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Relation hallucination: a plausible edge the text never states",
+            "Type drift: 'battery_maker' as a predicate, or a City node reused for a company town",
+            "Over-merging: one node for two entities, invisible until a query returns a contradiction",
+            "Silent loss: numbers, dates and negations dropped because they fit no triple"
+          ]
+        },
+        {
+          "t": "note",
+          "x": "Build the gold set by hand on 30 documents before you tune anything. Without it, every prompt change is a vibe check and quality claims are unfalsifiable."
+        }
+      ],
+      "exercises": [
+        {
+          "id": "m9e1",
+          "type": "numeric",
+          "prompt": "Gold set has 50 triples. The extractor emitted 40 triples, 32 of them correct. What is the recall? Give a decimal or a percentage.",
+          "answer": 0.64,
+          "tolerance": 0.01,
+          "why": "Recall counts what you found out of what exists: 32 of 50 = 0.64. Precision would be 32 of 40 = 0.80. Two thirds of the source's facts never reach the graph, which is invisible if you only ever look at the output.",
+          "hint": "Correctly found / everything in the gold set."
+        },
+        {
+          "id": "m9e2",
+          "type": "mcq",
+          "prompt": "Precision 0.80, recall 0.64. Where is the loss?",
+          "options": [
+            "Coverage: 18 gold triples were never extracted, while 8 emitted triples were wrong.",
+            "The extractor is over-emitting, so tighten the schema and remove predicates.",
+            "The gold set is wrong, since precision is high.",
+            "Recall and precision are the same measure at different thresholds."
+          ],
+          "answer": 0,
+          "why": "8 bad emissions (40 minus 32) and 18 missed facts (50 minus 32). The dominant loss is coverage, not accuracy. Tightening the schema would raise precision and drop recall further. The fix is a second extraction pass with relation-specific prompts, not a stricter filter.",
+          "wrong": [
+            "",
+            "That treats 8 wrong emissions as the problem while 18 missing facts sit unexamined. You would make the real gap worse.",
+            "A high precision number says nothing about the gold set's correctness, and it certainly does not explain 18 missing facts.",
+            "They measure opposite error directions: what you emitted versus what you found."
+          ]
+        },
+        {
+          "id": "m9e3",
+          "type": "mcq",
+          "prompt": "An extractor reports precision 0.99 by emitting about three triples per document. Is it good?",
+          "options": [
+            "No. Precision is trivially gameable by emitting less; the claim is only meaningful next to recall and the gold set size.",
+            "Yes. 0.99 precision is production quality.",
+            "Yes, if the three triples are the important ones.",
+            "It depends only on the model size."
+          ],
+          "answer": 0,
+          "why": "Emit one triple you are certain about and precision approaches 1.0. The number is uninterpretable without recall. Always report precision, recall and the gold set size together, or the metric is decoration.",
+          "wrong": [
+            "",
+            "Precision without recall is half a scoreboard, and the cheap half.",
+            "Then show that those three cover most of the gold set. Without that, the claim is unfalsifiable.",
+            "Model size does not fix a metric that can be gamed by emitting less."
+          ]
+        }
+      ],
+      "instructions": [
+        "One numeric item and two judgement items. The numeric item is not a trick: recall is what you found divided by what exists in the gold set.",
+        "Write the decimal (0.64) or the percentage (64 percent). Either is accepted.",
+        "Grading: the numeric item is correct within 0.01. The judgement items are all or nothing."
+      ]
+    }
+  ]
+}

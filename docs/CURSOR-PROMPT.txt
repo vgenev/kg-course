@@ -1,0 +1,18 @@
+Implement docs/BUILD-SPEC.md in this repository. Read the spec first, then src/data.json.
+
+What already exists: docs/BUILD-SPEC.md (the work order), src/data.json (authored course content: 9 modules, 28 graded items, all instructions and explanations written), package.json.
+
+What you must create: src/grader.js, src/app.js, src/styles.css, src/index.template.html, build.mjs, test/grader.test.cjs, and the built output dist/knowledge-graphs-course.html.
+
+Hard rules:
+1. Do not edit src/data.json. Its ids, prompts, options, answers, aliases, explanations and instructions are already authored and reviewed. Render them, do not rewrite or "improve" them.
+2. No third-party dependencies. Node stdlib only. No network calls, no CDN, no external fonts, no frameworks.
+3. The Instructions block for each module must render immediately BEFORE the first graded item, never after it.
+4. src/grader.js is a single-file UMD wrapper with no imports: it must work as a browser global (window.KGGrader) and inside Node via require(), so the test suite exercises the exact same code the page runs.
+5. The grading rules in the spec are the contract. Implement them literally, especially the triples scoring formula (extra wrong lines must lower the score), the multi-select cancellation rule, and the percent form for the numeric item.
+6. build.mjs inlines styles, grader and app into one HTML file with no tokens left behind.
+7. Run the acceptance steps in the spec yourself and report the real command output. If a test cannot pass, say so plainly with the output instead of weakening the test.
+
+Then commit the files you created (do not git add -A; do not touch dist in a way that breaks the build) with the message "kg-course: interactive course app + grading engine".
+
+Report: files created, the exact test output, the built file size, and anything in the spec you could not satisfy.
