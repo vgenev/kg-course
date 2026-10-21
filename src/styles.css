@@ -200,6 +200,36 @@ body {
   font-size: 0.8rem;
 }
 
+.rail-phase-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem 0.65rem 0.35rem;
+  margin-top: 0.35rem;
+  pointer-events: none;
+}
+
+.rail-phase-header:first-of-type {
+  margin-top: 0;
+}
+
+.rail-phase-label {
+  font-size: 0.72rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.rail-phase-note {
+  font-size: 0.68rem;
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  opacity: 0.85;
+  line-height: 1.35;
+}
+
 .meter {
   display: flex;
   gap: 2px;
@@ -652,11 +682,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+.course-source {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.phase-heading {
+  margin-top: 1.75rem;
+}
+
+.phase-heading:first-of-type {
+  margin-top: 1.25rem;
+}
+
+.phase-heading h2 {
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.phase-heading p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.9;
+}
+
+.module-meta {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin: -0.25rem 0 1.25rem;
+}
+
 .module-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .module-card {

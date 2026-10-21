@@ -49,6 +49,14 @@
     );
   }
 
+  function modulesInPhase(phaseId) {
+    return COURSE.modules.filter((m) => m.phase === phaseId);
+  }
+
+  function phaseForModule(mod) {
+    return COURSE.phases.find((p) => p.id === mod.phase);
+  }
+
   function findExercise(id) {
     for (const m of COURSE.modules) {
       const ex = m.exercises.find((e) => e.id === id);
@@ -512,6 +520,15 @@
     container.appendChild(el('p', { className: 'kicker', text: mod.kicker }));
     container.appendChild(el('h1', { text: mod.title }));
     container.appendChild(el('p', { className: 'goal', text: mod.goal }));
+    const ph = phaseForModule(mod);
+    if (ph) {
+      container.appendChild(
+        el('p', {
+          className: 'module-meta',
+          text: ph.label + ' · ' + mod.weeks,
+        })
+      );
+    }
     renderLesson(mod.lesson, container);
     if (mod.text) {
       const st = el('div', { className: 'sample-text' });
@@ -598,39 +615,57 @@
       row.appendChild(mkStat('Weakest part:', 'Part ' + st.weakest.num));
     }
     container.appendChild(row);
-    const grid = el('div', { className: 'module-grid' });
-    for (const m of COURSE.modules) {
-      const mm = Math.round(moduleMastery(m) * 100);
-      const anyAttempt = m.exercises.some((e) => recFor(e.id).attempts > 0);
-      const card = el('div', { className: 'module-card' });
-      card.appendChild(
-        el('div', {
-          className: 'rail-num',
-          text: String(m.num).padStart(2, '0'),
+    if (COURSE.course.source) {
+      container.appendChild(
+        el('p', {
+          className: 'course-source',
+          text: 'Source: ' + COURSE.course.source,
         })
       );
-      card.appendChild(el('strong', { text: m.title }));
-      card.appendChild(el('span', { text: m.kicker }));
-      card.appendChild(el('p', { text: m.goal }));
-      card.appendChild(
-        el('span', {
-          text: anyAttempt ? 'Mastery ' + mm + '%' : 'Not started',
-        })
-      );
-      card.appendChild(
-        el('button', {
-          type: 'button',
-          className: 'btn-check btn-open',
-          text: 'Open',
-          onClick: () => {
-            view = { kind: 'module', id: m.id };
-            render();
-          },
-        })
-      );
-      grid.appendChild(card);
     }
-    container.appendChild(grid);
+    for (const phase of COURSE.phases) {
+      const mods = modulesInPhase(phase.id);
+      if (!mods.length) continue;
+      const heading = el('div', { className: 'phase-heading' });
+      heading.appendChild(el('h2', { text: phase.label }));
+      if (phase.note) {
+        heading.appendChild(el('p', { text: phase.note }));
+      }
+      container.appendChild(heading);
+      const grid = el('div', { className: 'module-grid' });
+      for (const m of mods) {
+        const mm = Math.round(moduleMastery(m) * 100);
+        const anyAttempt = m.exercises.some((e) => recFor(e.id).attempts > 0);
+        const card = el('div', { className: 'module-card' });
+        card.appendChild(
+          el('div', {
+            className: 'rail-num',
+            text: String(m.num).padStart(2, '0'),
+          })
+        );
+        card.appendChild(el('strong', { text: m.title }));
+        card.appendChild(el('span', { text: m.kicker }));
+        card.appendChild(el('p', { text: m.goal }));
+        card.appendChild(
+          el('span', {
+            text: anyAttempt ? 'Mastery ' + mm + '%' : 'Not started',
+          })
+        );
+        card.appendChild(
+          el('button', {
+            type: 'button',
+            className: 'btn-check btn-open',
+            text: 'Open',
+            onClick: () => {
+              view = { kind: 'module', id: m.id };
+              render();
+            },
+          })
+        );
+        grid.appendChild(card);
+      }
+      container.appendChild(grid);
+    }
   }
 
   function renderReview(container) {
@@ -874,30 +909,40 @@
     });
     nav.appendChild(ov);
 
-    for (const m of COURSE.modules) {
-      const mm = moduleMastery(m);
-      const btn = el('button', {
-        type: 'button',
-        className: 'rail-item',
-        'aria-current':
-          view.kind === 'module' && view.id === m.id ? 'page' : null,
-      });
-      const label = el('span', { className: 'rail-item-label' });
-      label.appendChild(
-        el('span', {
-          className: 'rail-num',
-          text: String(m.num).padStart(2, '0'),
-        })
-      );
-      label.appendChild(document.createTextNode(m.title));
-      btn.appendChild(label);
-      btn.appendChild(railMeter(mm));
-      btn.addEventListener('click', () => {
-        view = { kind: 'module', id: m.id };
-        drill = null;
-        render();
-      });
-      nav.appendChild(btn);
+    for (const phase of COURSE.phases) {
+      const mods = modulesInPhase(phase.id);
+      if (!mods.length) continue;
+      const header = el('div', { className: 'rail-phase-header' });
+      header.appendChild(el('span', { className: 'rail-phase-label', text: phase.label }));
+      if (phase.note) {
+        header.appendChild(el('span', { className: 'rail-phase-note', text: phase.note }));
+      }
+      nav.appendChild(header);
+      for (const m of mods) {
+        const mm = moduleMastery(m);
+        const btn = el('button', {
+          type: 'button',
+          className: 'rail-item',
+          'aria-current':
+            view.kind === 'module' && view.id === m.id ? 'page' : null,
+        });
+        const label = el('span', { className: 'rail-item-label' });
+        label.appendChild(
+          el('span', {
+            className: 'rail-num',
+            text: String(m.num).padStart(2, '0'),
+          })
+        );
+        label.appendChild(document.createTextNode(m.title));
+        btn.appendChild(label);
+        btn.appendChild(railMeter(mm));
+        btn.addEventListener('click', () => {
+          view = { kind: 'module', id: m.id };
+          drill = null;
+          render();
+        });
+        nav.appendChild(btn);
+      }
     }
 
     const weakN = reviewList().length;
