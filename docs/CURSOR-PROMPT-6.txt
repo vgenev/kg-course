@@ -1,0 +1,15 @@
+Round 4 on the scratchpad. Read the "Scratchpad round 4: arrows, per-element delete, text" section at the end of docs/BUILD-SPEC.md and implement it.
+
+Three user-reported defects, all real:
+
+1. ARROWS ARE INVISIBLE. In src/scratchpad.js `drawEdge` ends the line 14px from the target node CENTRE and draws the head there. Node boxes are painted afterwards and are 40-100px wide, so the head is covered. I verified this by reading the code path, not by eyeballing the canvas: the head exists but sits under the box.
+
+2. NO PER-ELEMENT DELETE. Only Undo and Clear exist. There is no way to remove one edge without wiping the pad. Add an Eraser tool as specified: topmost hit test in order text, node, edge, stroke; deleting a node also deletes its edges; 8px tolerance for edges, 6px for strokes; hover outline of the doomed element; removal is persisted.
+
+3. NO TEXT TOOL. Add a Text tool: click, inline input, Enter commits a free annotation at that point, no box, ink colour, 12px, stored in `texts` and re-openable for editing.
+
+Also: the arrow tip must be computed at the target node's BOX BOUNDARY plus 3px outward, and heads must be drawn in a second pass after nodes so no box can cover them. Short edges must still show a head (clamp to the visible line midpoint).
+
+Constraints: do not touch src/data.json, src/grader.js or the grading views. Keep the existing tools and their behaviour intact (pen, node drag, edge drag with label input, undo, clear, save PNG). Toolbar order: Pen, Node, Edge, Text, Eraser, Undo, Clear, colours, Save PNG. Persist `texts` in the same localStorage pads object; treat a missing `texts` field as empty.
+
+Verify with real input (CDP or Playwright, real mouse events, not synthetic .click() on the canvas) and report numbers for each acceptance case in the spec. Then rebuild dist and index.html and run `npm test`. Commit as "kg-course: visible arrowheads, eraser tool, free-text annotations". If a case fails, report the measured number instead of claiming success.
