@@ -1,0 +1,27 @@
+Fix round on the scratchpad you just committed. I drove the built file in a real browser and the pad is unusable. Measured facts, all reproduced on dist/knowledge-graphs-course.html:
+
+CASE A, viewport 1440x900, scratchpad open on the overview:
+- `<canvas class="scratch-canvas">` has inline `style="width:1px;height:1px"` and attributes width=1 height=1.
+- Its parent `div.scratch-canvas-wrap` measures 391.8 x 160 px.
+- Net effect: the pad is invisible and undrawable.
+
+CASE B, viewport 900x800, same page:
+- The canvas measures 0 x 0.
+- The layout still renders a separate `aside.scratch-column` as a grid track (`grid-template-columns: 260px 640px` on `.app-shell.scratch-open`), instead of the pad being the first block inside the panel.
+- The pad's DOM position is AFTER `.panel h1`, so on a narrow screen a user must scroll past the lesson to reach it.
+
+Required outcomes, each one is a behaviour check you must run and report:
+
+1. Canvas sizing. On mount and on every container resize the canvas CSS box must equal its wrapper's content box, and the backing store must be that size times devicePixelRatio. Never write 1px or 0. If a measurement is 0 (element not laid out yet), defer to the next animation frame and retry, do not clamp to 1. Use a ResizeObserver on the wrapper plus one rAF after mount. After the fix, at 1440x900 the canvas must be at least 340px tall and at least 340px wide, and `getImageData` must return a full-size buffer.
+
+2. Usable height. Give `.scratch-canvas-wrap` a min-height of 340px. In the three-column layout the column fills the viewport height minus the header (sticky) with the canvas taking the remaining space; when inline, min 340px and never more than 60vh.
+
+3. Narrow layout. Below 1200px there must be NO scratch column: remove the aside from the grid (two tracks only), and render the scratchpad as the FIRST child inside the panel, before the module kicker/h1. Assert it by DOM order: `canvas.compareDocumentPosition(panel h1)` must report the h1 as FOLLOWING the canvas.
+
+4. Draw must work at 1440 with real input. Drive it yourself with CDP or a pointer-event sequence: pen stroke over ~12 points, then assert the stroke is in localStorage under `kg-course-scratch-v1` for the current pad key, and that the canvas has non-background pixels.
+
+5. Per-part pads stay separate: navigate to another module, draw, and confirm the first module's strokes are still there when you come back; confirm the pad key is the module id and `overview` for the overview.
+
+6. Optional but wanted: a very subtle dot grid on the wrapper background using theme CSS variables, so the pad reads as a sketch surface. Only if it does not affect the measurement logic.
+
+Then rebuild dist AND index.html (byte-identical), run npm test, and report per case: the measured canvas size, the pixel count that changed, the storage key you verified, and the narrow-layout DOM order result. If any case still fails, report the number instead of claiming success.
