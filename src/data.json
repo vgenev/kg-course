@@ -2,8 +2,8 @@
   "course": {
     "title": "Knowledge Graphs",
     "subtitle": "Retrieval is not reasoning over connections. Thirteen parts, four phases, graded.",
-    "note": "Built from the daVault curriculum: kg-agentic-graph-design-course-checklist.md and the compressed crash course. Every wrong answer returns the correction and the reason.",
-    "source": "daVault / 02-Resources / tech / kg-agentic-graph-design-course-checklist.md",
+    "note": "Built from the @cyrilXBT knowledge-graph and agentic-graph design curriculum. Every wrong answer returns the correction and the reason.",
+    "source": "Curriculum: @cyrilXBT, KG + agentic graph design (10-week arc)",
     "howto": [
       "Four phases, thirteen parts, 44 graded items. Phase 1 is manual extraction with no model, because you cannot evaluate an extractor you have never beaten by hand.",
       "Each part has a lesson, a sample text when the part needs one, instructions, then items. Jump anywhere from the left rail.",
@@ -13,10 +13,26 @@
     ]
   },
   "phases": [
-    { "id": "p1", "label": "Foundations", "note": "Weeks 1-2. Manual extraction, no model." },
-    { "id": "p2", "label": "The four-stage pipeline", "note": "Weeks 3-4. Extract, Resolve, Assemble, Query." },
-    { "id": "p3", "label": "Agentic graph design", "note": "Weeks 5-6. States, triggers, escalation." },
-    { "id": "p4", "label": "Proof", "note": "Weeks 7-10. The failure log is the deliverable." }
+    {
+      "id": "p1",
+      "label": "Foundations",
+      "note": "Weeks 1-2. Manual extraction, no model."
+    },
+    {
+      "id": "p2",
+      "label": "The four-stage pipeline",
+      "note": "Weeks 3-4. Extract, Resolve, Assemble, Query."
+    },
+    {
+      "id": "p3",
+      "label": "Agentic graph design",
+      "note": "Weeks 5-6. States, triggers, escalation."
+    },
+    {
+      "id": "p4",
+      "label": "Proof",
+      "note": "Weeks 7-10. The failure log is the deliverable."
+    }
   ],
   "modules": [
     {
@@ -32,11 +48,30 @@
         "body": "Ticket #1041 (Mar 2): Billing doubled after I upgraded to Pro. Alex from support said the old Basic plan wasn't canceled.\n\nTicket #1042 (Mar 3): Alex reactivated my Basic plan and refunded March. Upgrade to Pro now works.\n\nTicket #1047 (Mar 5): Can't export to CSV. Support told me it's a known bug with the Pro plan's export tool."
       },
       "lesson": [
-        { "t": "p", "x": "Retrieval finds text similar to your question. A knowledge graph represents the actual chain of connected things: ticket, then defective part, then product line, then supplier, then shipment batch, then root cause. The first hands you chunks and leaves you to connect them. The second traverses connections for you." },
-        { "t": "h", "x": "Why the distinction decides everything downstream" },
-        { "t": "p", "x": "If you believe retrieval is reasoning, you will build a chunk index, call it RAG, and then wonder why the answer to a cross-document question is a confident paragraph with no chain behind it. Every later decision, the schema, the resolve step, the provenance, the citation rule, exists to make the chain real." },
-        { "t": "note", "x": "The vault gate for this phase: can you explain retrieval versus following a chain of connected facts, using your own text as the example? If not, redo the exercise with a different text set." },
-        { "t": "ul", "x": ["Retrieval answers: here are passages that look like your question", "A graph answers: here is the path from A to B, and here is each edge on it", "The tell: a question with no wording overlap with its answer needs connections, not similarity"] }
+        {
+          "t": "p",
+          "x": "Retrieval finds text similar to your question. A knowledge graph represents the actual chain of connected things: ticket, then defective part, then product line, then supplier, then shipment batch, then root cause. The first hands you chunks and leaves you to connect them. The second traverses connections for you."
+        },
+        {
+          "t": "h",
+          "x": "Why the distinction decides everything downstream"
+        },
+        {
+          "t": "p",
+          "x": "If you believe retrieval is reasoning, you will build a chunk index, call it RAG, and then wonder why the answer to a cross-document question is a confident paragraph with no chain behind it. Every later decision, the schema, the resolve step, the provenance, the citation rule, exists to make the chain real."
+        },
+        {
+          "t": "note",
+          "x": "The vault gate for this phase: can you explain retrieval versus following a chain of connected facts, using your own text as the example? If not, redo the exercise with a different text set."
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Retrieval answers: here are passages that look like your question",
+            "A graph answers: here is the path from A to B, and here is each edge on it",
+            "The tell: a question with no wording overlap with its answer needs connections, not similarity"
+          ]
+        }
       ],
       "instructions": [
         "Read the three tickets first. They are the sample text for the whole of Phase 1.",
@@ -73,7 +108,10 @@
             "What does the docs page say about retry behaviour?",
             "Which tickets were handled by the same agent who later worked on the CSV export bug?"
           ],
-          "answers": [0, 3],
+          "answers": [
+            0,
+            3
+          ],
           "notes": [
             "Two hops through two organisations and a shared person across documents. No chunk contains it.",
             "Single document, summarisation. Retrieval handles this well and the graph adds cost.",
@@ -112,11 +150,26 @@
       "kicker": "The manual extraction judgment",
       "goal": "Separate the things in a passage from the relationships around them.",
       "lesson": [
-        { "t": "p", "x": "An entity is a thing you can point at twice: a person, a product, a feature, an organisation, an event, a place. Billing, support and upgraded are not entities. They are relationships and context wearing noun clothing, and adding them is the most common way a schema leaks." },
-        { "t": "h", "x": "The list you should produce by hand" },
-        { "t": "code", "x": "Alex          person\nBasic plan    product\nPro plan      product\nCSV export    feature\nTicket #1041  event\nMarch         time" },
-        { "t": "p", "x": "For each entity, note three things: the canonical name you will use, its type, and the variants the text uses for it. The variant list is what the Resolve stage will need later, so collect it while you are reading rather than guessing afterwards." },
-        { "t": "note", "x": "Judgment test: would it make sense to say 'tell me everything connected to X'? For Alex, yes. For upgraded, the question is meaningless. That question separates entities from everything else." }
+        {
+          "t": "p",
+          "x": "An entity is a thing you can point at twice: a person, a product, a feature, an organisation, an event, a place. Billing, support and upgraded are not entities. They are relationships and context wearing noun clothing, and adding them is the most common way a schema leaks."
+        },
+        {
+          "t": "h",
+          "x": "The list you should produce by hand"
+        },
+        {
+          "t": "code",
+          "x": "Alex          person\nBasic plan    product\nPro plan      product\nCSV export    feature\nTicket #1041  event\nMarch         time"
+        },
+        {
+          "t": "p",
+          "x": "For each entity, note three things: the canonical name you will use, its type, and the variants the text uses for it. The variant list is what the Resolve stage will need later, so collect it while you are reading rather than guessing afterwards."
+        },
+        {
+          "t": "note",
+          "x": "Judgment test: would it make sense to say 'tell me everything connected to X'? For Alex, yes. For upgraded, the question is meaningless. That question separates entities from everything else."
+        }
       ],
       "instructions": [
         "Use the three tickets from Part 1. Open it from the rail if you need to reread them.",
@@ -128,8 +181,20 @@
           "id": "m2e1",
           "type": "multi",
           "prompt": "Which of these are entities in the three tickets?",
-          "options": ["Alex", "Basic plan", "March", "upgraded", "billing", "CSV export"],
-          "answers": [0, 1, 2, 5],
+          "options": [
+            "Alex",
+            "Basic plan",
+            "March",
+            "upgraded",
+            "billing",
+            "CSV export"
+          ],
+          "answers": [
+            0,
+            1,
+            2,
+            5
+          ],
           "notes": [
             "A person, named and persistent across tickets. Entity.",
             "A product. Another ticket refers to it as 'the plan I had before', so it needs a canonical name and variants.",
@@ -144,12 +209,33 @@
           "id": "m2e2",
           "type": "categorize",
           "prompt": "Type each entity you kept from the tickets.",
-          "buckets": ["Person", "Product", "Feature", "Event"],
+          "buckets": [
+            "Person",
+            "Product",
+            "Feature",
+            "Event"
+          ],
           "items": [
-            { "text": "Alex", "bucket": 0, "note": "A support agent. Type person, with a role that is itself a relation." },
-            { "text": "Basic plan", "bucket": 1, "note": "Type product. It appears as Basic, 'the old Basic plan' and 'the plan I had before'." },
-            { "text": "CSV export", "bucket": 2, "note": "Type feature. It is the object of the bug relation, not a product on its own." },
-            { "text": "Ticket #1041", "bucket": 3, "note": "Type event. Tickets are events with a date, a reporter and a set of relations." }
+            {
+              "text": "Alex",
+              "bucket": 0,
+              "note": "A support agent. Type person, with a role that is itself a relation."
+            },
+            {
+              "text": "Basic plan",
+              "bucket": 1,
+              "note": "Type product. It appears as Basic, 'the old Basic plan' and 'the plan I had before'."
+            },
+            {
+              "text": "CSV export",
+              "bucket": 2,
+              "note": "Type feature. It is the object of the bug relation, not a product on its own."
+            },
+            {
+              "text": "Ticket #1041",
+              "bucket": 3,
+              "note": "Type event. Tickets are events with a date, a reporter and a set of relations."
+            }
           ],
           "why": "Types are what let the validator reject bad triples later. A product cannot be the agent of a support action, and knowing that costs nothing at extraction time."
         },
@@ -183,11 +269,26 @@
       "kicker": "Subject, predicate, object",
       "goal": "Write one fact per line, with a predicate that is a relation.",
       "lesson": [
-        { "t": "p", "x": "A triple is subject, predicate, object: one fact, one line. The subject and object are entities, the predicate is a relation type from your schema. The predicate is where most hand-written extraction fails, because the natural-language verb is rarely the relation you want." },
-        { "t": "h", "x": "The worked example" },
-        { "t": "code", "x": "alex         | handles      | ticket_1041\nalex         | reactivated  | basic_plan\nticket_1047  | involves     | csv_export\ncsv_export   | bugged_in    | pro_plan" },
-        { "t": "p", "x": "Note what each line refuses to do. 'Billing doubled' is not a triple, it is a symptom with no second entity. 'Upgraded to Pro' produces two possible relations and the ticket only supports the cancellation one. A triple you cannot point at a sentence for is a triple you invented." },
-        { "t": "note", "x": "If a line needs the word 'and' to be true, it is two triples. If it needs a date, a role or a source, it is an event node, which is Part 7." }
+        {
+          "t": "p",
+          "x": "A triple is subject, predicate, object: one fact, one line. The subject and object are entities, the predicate is a relation type from your schema. The predicate is where most hand-written extraction fails, because the natural-language verb is rarely the relation you want."
+        },
+        {
+          "t": "h",
+          "x": "The worked example"
+        },
+        {
+          "t": "code",
+          "x": "alex         | handles      | ticket_1041\nalex         | reactivated  | basic_plan\nticket_1047  | involves     | csv_export\ncsv_export   | bugged_in    | pro_plan"
+        },
+        {
+          "t": "p",
+          "x": "Note what each line refuses to do. 'Billing doubled' is not a triple, it is a symptom with no second entity. 'Upgraded to Pro' produces two possible relations and the ticket only supports the cancellation one. A triple you cannot point at a sentence for is a triple you invented."
+        },
+        {
+          "t": "note",
+          "x": "If a line needs the word 'and' to be true, it is two triples. If it needs a date, a role or a source, it is an event node, which is Part 7."
+        }
       ],
       "instructions": [
         "Use the three tickets from Part 1 as the only source. Do not add anything from the world.",
@@ -204,10 +305,83 @@
           "format": "subject | predicate | object",
           "example": "alex | handles | ticket_1041",
           "expected": [
-            { "s": ["alex", "alex k", "support agent alex"], "p": ["handles", "handled", "responded to", "works on", "assigned to", "owns", "answered"], "o": ["ticket 1041", "1041"] },
-            { "s": ["alex", "alex k", "support agent alex"], "p": ["reactivated", "restored", "re enabled", "reenabled", "fixed"], "o": ["basic plan", "basic", "the basic plan"] },
-            { "s": ["ticket 1047", "1047"], "p": ["involves", "reports", "concerns", "about", "mentions"], "o": ["csv export", "csv", "export to csv", "csv exporter"] },
-            { "s": ["csv export", "csv", "export to csv"], "p": ["bugged in", "has bug in", "broken in", "fails in", "bug in"], "o": ["pro plan", "pro", "the pro plan"] }
+            {
+              "s": [
+                "alex",
+                "alex k",
+                "support agent alex"
+              ],
+              "p": [
+                "handles",
+                "handled",
+                "responded to",
+                "works on",
+                "assigned to",
+                "owns",
+                "answered"
+              ],
+              "o": [
+                "ticket 1041",
+                "1041"
+              ]
+            },
+            {
+              "s": [
+                "alex",
+                "alex k",
+                "support agent alex"
+              ],
+              "p": [
+                "reactivated",
+                "restored",
+                "re enabled",
+                "reenabled",
+                "fixed"
+              ],
+              "o": [
+                "basic plan",
+                "basic",
+                "the basic plan"
+              ]
+            },
+            {
+              "s": [
+                "ticket 1047",
+                "1047"
+              ],
+              "p": [
+                "involves",
+                "reports",
+                "concerns",
+                "about",
+                "mentions"
+              ],
+              "o": [
+                "csv export",
+                "csv",
+                "export to csv",
+                "csv exporter"
+              ]
+            },
+            {
+              "s": [
+                "csv export",
+                "csv",
+                "export to csv"
+              ],
+              "p": [
+                "bugged in",
+                "has bug in",
+                "broken in",
+                "fails in",
+                "bug in"
+              ],
+              "o": [
+                "pro plan",
+                "pro",
+                "the pro plan"
+              ]
+            }
           ],
           "why": "Four assertions, four lines. Billing, March, upgraded and support belong to none of them: they are symptoms, times and verbs. If you wrote a line for 'billing doubled', ask what its object is. There is none, and that is the signal.",
           "hint": "Lower case, one fact per line, three fields separated by a pipe."
@@ -216,7 +390,12 @@
           "id": "m3e2",
           "type": "mcq",
           "prompt": "Which word from the tickets is a relation type rather than a topic?",
-          "options": ["handles", "billing", "support", "upgraded"],
+          "options": [
+            "handles",
+            "billing",
+            "support",
+            "upgraded"
+          ],
           "answer": 0,
           "why": "Handles takes two entities and asserts something between them. Billing is a topic, support is a channel, and upgraded is a verb describing a change that only becomes a fact once you name both the plan and the date.",
           "wrong": [
@@ -237,7 +416,11 @@
             "ticket_1047 | involves | csv export",
             "basic plan | upgraded to | pro plan"
           ],
-          "answers": [0, 2, 3],
+          "answers": [
+            0,
+            2,
+            3
+          ],
           "notes": [
             "Ticket #1042 opens with Alex reacting, and #1041 says Alex was the support contact. Supported.",
             "The tickets say billing doubled and that a plan was not cancelled. They never assert causation. This is the invented-causal-edge failure, and it is the one that reads most convincingly.",
@@ -258,11 +441,26 @@
       "kicker": "Draw it, then say what it proves",
       "goal": "Trace a path across documents and name what it reveals that per-document search does not.",
       "lesson": [
-        { "t": "p", "x": "Draw circles for entities and arrows for predicates. The picture is not the deliverable. What the picture shows is: one person, Alex, sits on both the billing failure and the CSV bug, across two tickets that share no wording. A document search returns those tickets separately, or returns neither." },
-        { "t": "h", "x": "The long chain, from the vault" },
-        { "t": "code", "x": "support ticket -> defective part -> product line -> supplier -> shipment batch -> root cause" },
-        { "t": "p", "x": "Six nodes. No single document contains the whole path, and no embedding of the question is close to any of the six. That is the shape of every question a graph is for: the answer is a path, and the path is the evidence." },
-        { "t": "note", "x": "Phase 1 gate: you cannot pass this phase on definitions alone. Point at one entity in your own text and walk the chain that retrieval would miss." }
+        {
+          "t": "p",
+          "x": "Draw circles for entities and arrows for predicates. The picture is not the deliverable. What the picture shows is: one person, Alex, sits on both the billing failure and the CSV bug, across two tickets that share no wording. A document search returns those tickets separately, or returns neither."
+        },
+        {
+          "t": "h",
+          "x": "The long chain, from the vault"
+        },
+        {
+          "t": "code",
+          "x": "support ticket -> defective part -> product line -> supplier -> shipment batch -> root cause"
+        },
+        {
+          "t": "p",
+          "x": "Six nodes. No single document contains the whole path, and no embedding of the question is close to any of the six. That is the shape of every question a graph is for: the answer is a path, and the path is the evidence."
+        },
+        {
+          "t": "note",
+          "x": "Phase 1 gate: you cannot pass this phase on definitions alone. Point at one entity in your own text and walk the chain that retrieval would miss."
+        }
       ],
       "instructions": [
         "Three items: what the drawing reveals, the order of the long chain, and one implied connection.",
@@ -293,7 +491,14 @@
           "id": "m4e2",
           "type": "order",
           "prompt": "Order the causal chain from the symptom to the root cause.",
-          "items": ["Support ticket", "Defective part", "Product line", "Supplier", "Shipment batch", "Root cause"],
+          "items": [
+            "Support ticket",
+            "Defective part",
+            "Product line",
+            "Supplier",
+            "Shipment batch",
+            "Root cause"
+          ],
           "why": "Symptom first, cause last, each hop a named relation. Reversing it is how you end up with a graph that can only answer questions you already knew the answer to."
         },
         {
@@ -326,11 +531,26 @@
       "kicker": "One cheap call per document, strict JSON",
       "goal": "Define the extraction contract so the model cannot return topics as entities.",
       "lesson": [
-        { "t": "p", "x": "Extract is one cheap model call per document returning structured JSON. The schema is the control surface: entities carry type and canonical_name, triples carry subject, predicate and object that reference those canonical names. No freeform text, no invented relationships." },
-        { "t": "h", "x": "The contract" },
-        { "t": "code", "x": "{\n  entities: [{ type: 'product', canonical_name: 'pro_plan',\n               variants: ['Pro', 'the paid tier'] }],\n  triples:  [{ subject: 'alex', predicate: 'handles',\n               object: 'ticket_1047' }]\n}" },
-        { "t": "p", "x": "Two rules do most of the work. One fact per triple, so a line containing 'and' is rejected. And a closed predicate list, because an open one produces employed_by, works_for and employee_at for the same relation and fractures your graph into three." },
-        { "t": "note", "x": "The ten-minute gate from the vault: diff the model output against a document you extracted by hand. Any entity that is really a relationship means the schema is leaking. Fix the schema, rerun. Do not fix the output." }
+        {
+          "t": "p",
+          "x": "Extract is one cheap model call per document returning structured JSON. The schema is the control surface: entities carry type and canonical_name, triples carry subject, predicate and object that reference those canonical names. No freeform text, no invented relationships."
+        },
+        {
+          "t": "h",
+          "x": "The contract"
+        },
+        {
+          "t": "code",
+          "x": "{\n  entities: [{ type: 'product', canonical_name: 'pro_plan',\n               variants: ['Pro', 'the paid tier'] }],\n  triples:  [{ subject: 'alex', predicate: 'handles',\n               object: 'ticket_1047' }]\n}"
+        },
+        {
+          "t": "p",
+          "x": "Two rules do most of the work. One fact per triple, so a line containing 'and' is rejected. And a closed predicate list, because an open one produces employed_by, works_for and employee_at for the same relation and fractures your graph into three."
+        },
+        {
+          "t": "note",
+          "x": "The ten-minute gate from the vault: diff the model output against a document you extracted by hand. Any entity that is really a relationship means the schema is leaking. Fix the schema, rerun. Do not fix the output."
+        }
       ],
       "instructions": [
         "Four items: a schema leak, invalid output, the slot each field belongs to, and the pipeline order.",
@@ -367,7 +587,11 @@
             "triple: {subject: 'alex', predicate: 'handles', object: 'ticket_1041 and ticket_1047'}",
             "triple: {subject: 'alex', predicate: 'said', object: 'the old Basic plan was not canceled'}"
           ],
-          "answers": [0, 2, 3],
+          "answers": [
+            0,
+            2,
+            3
+          ],
           "notes": [
             "Two breaks: a topic type that should not exist in the schema, and no canonical_name field.",
             "Valid. Type plus canonical name is exactly the contract.",
@@ -380,12 +604,32 @@
           "id": "m5e3",
           "type": "categorize",
           "prompt": "Which slot does each piece of an extraction record belong to?",
-          "buckets": ["Entity field", "Triple field", "Neither"],
+          "buckets": [
+            "Entity field",
+            "Triple field",
+            "Neither"
+          ],
           "items": [
-            { "text": "canonical_name", "bucket": 0, "note": "The stable key the whole graph joins on." },
-            { "text": "type", "bucket": 0, "note": "Person, product, feature, event. The type is what the validator checks domain and range against." },
-            { "text": "predicate", "bucket": 1, "note": "A relation type from the closed list, never the surface verb." },
-            { "text": "confidence", "bucket": 2, "note": "Provenance, recorded per triple at assembly. It is not part of the extractor's entity or triple contract." }
+            {
+              "text": "canonical_name",
+              "bucket": 0,
+              "note": "The stable key the whole graph joins on."
+            },
+            {
+              "text": "type",
+              "bucket": 0,
+              "note": "Person, product, feature, event. The type is what the validator checks domain and range against."
+            },
+            {
+              "text": "predicate",
+              "bucket": 1,
+              "note": "A relation type from the closed list, never the surface verb."
+            },
+            {
+              "text": "confidence",
+              "bucket": 2,
+              "note": "Provenance, recorded per triple at assembly. It is not part of the extractor's entity or triple contract."
+            }
           ],
           "why": "Keeping the extraction contract small is what makes it enforceable. Provenance is attached later, at assembly, and mixing it into the extractor prompt makes the model editorialise."
         },
@@ -412,11 +656,29 @@
       "kicker": "The stage where the errors hide",
       "goal": "Catch a false merge and a missed merge, and explain why they are not equally bad.",
       "lesson": [
-        { "t": "p", "x": "Resolve clusters entity variants using context and description, not string matching. The killer case from the vault is Edwin Aldrin and Buzz Aldrin: the same person, zero shared tokens. String similarity scores that pair at zero and a lookup table never sees it." },
-        { "t": "h", "x": "Two error classes, both must be found" },
-        { "t": "ul", "x": ["False merge: two different things welded into one node. Every fact attached afterwards is contaminated and the fix means replaying history.", "Missed merge: the same thing left as two nodes. Visible, joinable later, annoying rather than destructive."] },
-        { "t": "p", "x": "Because the costs are asymmetric, the operational answer is a review band: auto-merge the confident pairs, auto-reject the clear negatives, and send the middle to a human with the evidence attached. That band is also where your labelled data comes from." },
-        { "t": "note", "x": "The vault gate for Weeks 3-4: show one extraction error you caught, one resolve error you caught, and what you changed. If you cannot show both, you rushed the phase." }
+        {
+          "t": "p",
+          "x": "Resolve clusters entity variants using context and description, not string matching. The killer case from the vault is Edwin Aldrin and Buzz Aldrin: the same person, zero shared tokens. String similarity scores that pair at zero and a lookup table never sees it."
+        },
+        {
+          "t": "h",
+          "x": "Two error classes, both must be found"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "False merge: two different things welded into one node. Every fact attached afterwards is contaminated and the fix means replaying history.",
+            "Missed merge: the same thing left as two nodes. Visible, joinable later, annoying rather than destructive."
+          ]
+        },
+        {
+          "t": "p",
+          "x": "Because the costs are asymmetric, the operational answer is a review band: auto-merge the confident pairs, auto-reject the clear negatives, and send the middle to a human with the evidence attached. That band is also where your labelled data comes from."
+        },
+        {
+          "t": "note",
+          "x": "The vault gate for Weeks 3-4: show one extraction error you caught, one resolve error you caught, and what you changed. If you cannot show both, you rushed the phase."
+        }
       ],
       "instructions": [
         "Four items: which pairs you would merge, the zero-overlap case, the asymmetry term, and the threshold policy.",
@@ -434,7 +696,11 @@
             "Pro / the paid tier",
             "Kestrel Robotics / Kestrel Systems"
           ],
-          "answers": [0, 1, 2],
+          "answers": [
+            0,
+            1,
+            2
+          ],
           "notes": [
             "Same person: same missions, same dates, same crew. Zero string overlap, and the context is unambiguous.",
             "The second ticket refers back to the plan named in the first. Co-reference across documents, resolvable from the thread.",
@@ -468,7 +734,19 @@
           "prompt": "Fill the blank with the error you should prefer when the matcher is unsure.",
           "sentence": "A merged pair is expensive to undo once triples attach to it, so when the matcher is unsure the cheap error is a ______ rather than a false merge.",
           "blanks": [
-            { "accept": ["missed merge", "false negative", "missing merge", "miss", "split", "under merge", "undermerge", "false split"], "note": "A missed merge leaves two nodes you can link later. A false merge poisons one node and every edge on it, and the fix is a replay." }
+            {
+              "accept": [
+                "missed merge",
+                "false negative",
+                "missing merge",
+                "miss",
+                "split",
+                "under merge",
+                "undermerge",
+                "false split"
+              ],
+              "note": "A missed merge leaves two nodes you can link later. A false merge poisons one node and every edge on it, and the fix is a replay."
+            }
           ],
           "why": "Asymmetric cost. Tune toward precision on merges, accept visible duplicates, and let the review band resolve the middle. Splitting is a cleanup; welding is a migration."
         },
@@ -502,11 +780,26 @@
       "kicker": "Canonical nodes, one source per fact",
       "goal": "Land the graph so every edge can be traced to the sentence that produced it.",
       "lesson": [
-        { "t": "p", "x": "Assemble takes canonical nodes, typed edges and a provenance record on every triple: source document, character span, extractor version, confidence, timestamp. Provenance is not metadata you add later. It is the thing that lets you review an extraction, detect a regression after a prompt change, and decide which source wins when two disagree." },
-        { "t": "h", "x": "Qualified facts become nodes" },
-        { "t": "code", "x": "action_1 | type    | SupportAction\naction_1 | agent   | alex\naction_1 | affects | basic_plan\naction_1 | date    | 2024-03-03" },
-        { "t": "p", "x": "In RDF an edge cannot hold agent, date and object at once, so the relation becomes a node. In a property graph you may put these on the edge instead, which is faster to write and impossible to port. Choose per project, but choose deliberately." },
-        { "t": "note", "x": "Quarantine beats deletion. A low-confidence triple with no source is a question, not an error. Park it in a holding graph until a person or a better source settles it." }
+        {
+          "t": "p",
+          "x": "Assemble takes canonical nodes, typed edges and a provenance record on every triple: source document, character span, extractor version, confidence, timestamp. Provenance is not metadata you add later. It is the thing that lets you review an extraction, detect a regression after a prompt change, and decide which source wins when two disagree."
+        },
+        {
+          "t": "h",
+          "x": "Qualified facts become nodes"
+        },
+        {
+          "t": "code",
+          "x": "action_1 | type    | SupportAction\naction_1 | agent   | alex\naction_1 | affects | basic_plan\naction_1 | date    | 2024-03-03"
+        },
+        {
+          "t": "p",
+          "x": "In RDF an edge cannot hold agent, date and object at once, so the relation becomes a node. In a property graph you may put these on the edge instead, which is faster to write and impossible to port. Choose per project, but choose deliberately."
+        },
+        {
+          "t": "note",
+          "x": "Quarantine beats deletion. A low-confidence triple with no source is a question, not an error. Park it in a holding graph until a person or a better source settles it."
+        }
       ],
       "instructions": [
         "Four items: the RDF versus property-graph choice, building an event node, what must carry provenance, and the missing provenance field.",
@@ -540,10 +833,80 @@
           "format": "action_1 | field | value",
           "example": "action_1 | agent | alex",
           "expected": [
-            { "s": ["action 1", "action1"], "p": ["type", "rdf type", "is a", "instance of", "class"], "o": ["support action", "supportaction", "action", "support action event"] },
-            { "s": ["action 1", "action1"], "p": ["agent", "actor", "performed by", "by"], "o": ["alex", "alex k"] },
-            { "s": ["action 1", "action1"], "p": ["affects", "object", "target", "about", "concerns"], "o": ["basic plan", "basic", "the basic plan"] },
-            { "s": ["action 1", "action1"], "p": ["date", "on", "happened on", "occurred on", "when"], "o": ["2024 03 03", "2024 03 3", "3 march 2024", "march 3 2024", "march 2024", "2024 03"] }
+            {
+              "s": [
+                "action 1",
+                "action1"
+              ],
+              "p": [
+                "type",
+                "rdf type",
+                "is a",
+                "instance of",
+                "class"
+              ],
+              "o": [
+                "support action",
+                "supportaction",
+                "action",
+                "support action event"
+              ]
+            },
+            {
+              "s": [
+                "action 1",
+                "action1"
+              ],
+              "p": [
+                "agent",
+                "actor",
+                "performed by",
+                "by"
+              ],
+              "o": [
+                "alex",
+                "alex k"
+              ]
+            },
+            {
+              "s": [
+                "action 1",
+                "action1"
+              ],
+              "p": [
+                "affects",
+                "object",
+                "target",
+                "about",
+                "concerns"
+              ],
+              "o": [
+                "basic plan",
+                "basic",
+                "the basic plan"
+              ]
+            },
+            {
+              "s": [
+                "action 1",
+                "action1"
+              ],
+              "p": [
+                "date",
+                "on",
+                "happened on",
+                "occurred on",
+                "when"
+              ],
+              "o": [
+                "2024 03 03",
+                "2024 03 3",
+                "3 march 2024",
+                "march 3 2024",
+                "march 2024",
+                "2024 03"
+              ]
+            }
           ],
           "why": "Four fields: what it is, who did it, what it touched, when. The date is a literal on the event, which is the point of the event existing. Ask what Alex did in March and this answers it without reading the ticket.",
           "hint": "The event node is the subject of all four lines."
@@ -558,7 +921,12 @@
             "A triple created by merging facts from two documents.",
             "A triple derived by a query over existing edges."
           ],
-          "answers": [0, 1, 2, 3],
+          "answers": [
+            0,
+            1,
+            2,
+            3
+          ],
           "notes": [
             "Model output without a span cannot be reviewed, so you can never measure or correct it.",
             "Hand entry is right more often, not always. Without the span nobody can re-check it and nobody knows it changed.",
@@ -573,7 +941,17 @@
           "prompt": "Fill the missing provenance field.",
           "sentence": "Each triple records the source document, the extractor version, a confidence, and the character ______ it was taken from.",
           "blanks": [
-            { "accept": ["span", "offset", "range", "character range", "position", "start and end"], "note": "The span is what makes a triple reviewable: click it and the source sentence highlights. Without it, 'is this extraction correct' has no answer." }
+            {
+              "accept": [
+                "span",
+                "offset",
+                "range",
+                "character range",
+                "position",
+                "start and end"
+              ],
+              "note": "The span is what makes a triple reviewable: click it and the source sentence highlights. Without it, 'is this extraction correct' has no answer."
+            }
           ],
           "why": "A fact you cannot highlight is a fact you cannot correct at scale, and correction at scale is the whole job."
         }
@@ -588,11 +966,26 @@
       "kicker": "No edge, no answer",
       "goal": "Make the answer trace to specific edges, and refuse when it cannot.",
       "lesson": [
-        { "t": "p", "x": "Query takes the relevant subgraph, serialises it as triples, and lets the model reason over those triples. The output rule is what separates a graph system from RAG with extra steps: the answer cites edges by name, or it does not answer." },
-        { "t": "h", "x": "Two answers to the same question" },
-        { "t": "code", "x": "bad:  Based on the support tickets, Alex may have caused the billing issue.\ngood: edge[alex -> handles -> ticket_1041] and edge[ticket_1041 -> reports -> billing_issue]\n      show one agent on both paths. Causation is not asserted by any edge." },
-        { "t": "p", "x": "The bad answer is fluent, unsupported and shaped like insight. It is also the default output of a system that was given chunks instead of edges. The good answer is dull and checkable, which is the trade you are making." },
-        { "t": "note", "x": "Rule: if the model cannot cite an edge, it does not answer. An honest miss is worth more than a confident paragraph nobody can verify." }
+        {
+          "t": "p",
+          "x": "Query takes the relevant subgraph, serialises it as triples, and lets the model reason over those triples. The output rule is what separates a graph system from RAG with extra steps: the answer cites edges by name, or it does not answer."
+        },
+        {
+          "t": "h",
+          "x": "Two answers to the same question"
+        },
+        {
+          "t": "code",
+          "x": "bad:  Based on the support tickets, Alex may have caused the billing issue.\ngood: edge[alex -> handles -> ticket_1041] and edge[ticket_1041 -> reports -> billing_issue]\n      show one agent on both paths. Causation is not asserted by any edge."
+        },
+        {
+          "t": "p",
+          "x": "The bad answer is fluent, unsupported and shaped like insight. It is also the default output of a system that was given chunks instead of edges. The good answer is dull and checkable, which is the trade you are making."
+        },
+        {
+          "t": "note",
+          "x": "Rule: if the model cannot cite an edge, it does not answer. An honest miss is worth more than a confident paragraph nobody can verify."
+        }
       ],
       "instructions": [
         "Four items: which answer is grounded, when a graph earns its cost, the retrieval order, and one unsupported claim.",
@@ -681,11 +1074,30 @@
       "kicker": "The agent half, same idea",
       "goal": "Apply explicit structure to the agent, not just the data.",
       "lesson": [
-        { "t": "p", "x": "The second half of the course is the same idea pointed at the agent. Replace opaque hidden decisions with explicit structure: states with triggers, instead of a loop where the model decides what happens next." },
-        { "t": "h", "x": "The three commitments" },
-        { "t": "ul", "x": ["Immutable plan: the plan locks once generated. No mid-run improvisation. Trades flexibility for auditability.", "Separated layers: planning, execution and recovery are independent roles, and the agent does not grade its own work.", "Strict escalation: recovery follows a fixed protocol with a hard retry limit, not infinite retries."] },
-        { "t": "p", "x": "Each commitment costs something real. You give up the ability to replan when step 4 goes wrong, in exchange for a decision path you can reconstruct afterwards. For a system whose output people rely on, that trade is usually correct, and it is always a decision rather than a default." },
-        { "t": "note", "x": "Same shape in both halves: a digraph of decisions in the data, a digraph of states in the agent. If you can only explain one, you built half a course." }
+        {
+          "t": "p",
+          "x": "The second half of the course is the same idea pointed at the agent. Replace opaque hidden decisions with explicit structure: states with triggers, instead of a loop where the model decides what happens next."
+        },
+        {
+          "t": "h",
+          "x": "The three commitments"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Immutable plan: the plan locks once generated. No mid-run improvisation. Trades flexibility for auditability.",
+            "Separated layers: planning, execution and recovery are independent roles, and the agent does not grade its own work.",
+            "Strict escalation: recovery follows a fixed protocol with a hard retry limit, not infinite retries."
+          ]
+        },
+        {
+          "t": "p",
+          "x": "Each commitment costs something real. You give up the ability to replan when step 4 goes wrong, in exchange for a decision path you can reconstruct afterwards. For a system whose output people rely on, that trade is usually correct, and it is always a decision rather than a default."
+        },
+        {
+          "t": "note",
+          "x": "Same shape in both halves: a digraph of decisions in the data, a digraph of states in the agent. If you can only explain one, you built half a course."
+        }
       ],
       "instructions": [
         "Three items: spot a violated commitment, select the commitments themselves, and name the trade-off.",
@@ -723,7 +1135,11 @@
             "Maximum parallelism: all available tools fire in one step.",
             "Self-grading: the executor scores its own output before finishing."
           ],
-          "answers": [0, 1, 2],
+          "answers": [
+            0,
+            1,
+            2
+          ],
           "notes": [
             "Auditability comes from the plan not moving under you.",
             "The agent that does the work is not the one that judges it.",
@@ -763,10 +1179,22 @@
       "kicker": "The graph you draw around the agent",
       "goal": "Write the five states and the trigger on every transition.",
       "lesson": [
-        { "t": "p", "x": "You design the agent as a graph: Planning, Executing step N, Recovering, Escalated, Complete. Every transition has a specific trigger. No state change happens because the model felt like it." },
-        { "t": "code", "x": "Planning    -> Executing 1   when the plan is written and frozen\nExecuting N -> Executing N+1 when step N verifies\nExecuting N -> Recovering    when step N fails\nRecovering  -> Executing N   when retries < 2\nRecovering  -> Escalated     when the retry limit is hit\nExecuting N -> Complete      when all steps verify" },
-        { "t": "p", "x": "Then run the same task twice: once with these states and rules given to the agent, once as one loose prompt. The difference you are measuring is not quality. It is whether you can explain why the system did what it did at each step." },
-        { "t": "note", "x": "Choose the retry limit deliberately and write down the reasoning. Two is a decision about cost and context, not a magic number, and you should be able to defend it." }
+        {
+          "t": "p",
+          "x": "You design the agent as a graph: Planning, Executing step N, Recovering, Escalated, Complete. Every transition has a specific trigger. No state change happens because the model felt like it."
+        },
+        {
+          "t": "code",
+          "x": "Planning    -> Executing 1   when the plan is written and frozen\nExecuting N -> Executing N+1 when step N verifies\nExecuting N -> Recovering    when step N fails\nRecovering  -> Executing N   when retries < 2\nRecovering  -> Escalated     when the retry limit is hit\nExecuting N -> Complete      when all steps verify"
+        },
+        {
+          "t": "p",
+          "x": "Then run the same task twice: once with these states and rules given to the agent, once as one loose prompt. The difference you are measuring is not quality. It is whether you can explain why the system did what it did at each step."
+        },
+        {
+          "t": "note",
+          "x": "Choose the retry limit deliberately and write down the reasoning. Two is a decision about cost and context, not a magic number, and you should be able to defend it."
+        }
       ],
       "instructions": [
         "Four items: order the states, name the escalation trigger, set the retry limit, defend it.",
@@ -778,7 +1206,13 @@
           "id": "m10e1",
           "type": "order",
           "prompt": "Order the states of one run that ends with a handoff.",
-          "items": ["Planning", "Executing 1", "Recovering", "Escalated", "Complete"],
+          "items": [
+            "Planning",
+            "Executing 1",
+            "Recovering",
+            "Escalated",
+            "Complete"
+          ],
           "why": "Every state is a position you can name after the fact. If the sequence cannot be written down, the transitions are not explicit and the run is opaque no matter how good the output looked."
         },
         {
@@ -843,10 +1277,22 @@
         "body": "plan written: 4 steps\nstep 1 ok\nstep 2 failed: schema mismatch\nreplanning: 3 new steps\nstep 1 (new plan) ok\nstep 2 (new plan) failed: same schema mismatch\nreplanning again\nstep 1 (third plan) failed\nresult: gave up, no handoff, no escalation record"
       },
       "lesson": [
-        { "t": "p", "x": "The gate after Week 6 is not did it work. It is: can you reconstruct the full decision path from memory, state by state? A log you cannot turn into a state sequence means the transitions were never explicit." },
-        { "t": "h", "x": "What the log above proves" },
-        { "t": "p", "x": "Three plans, the same failure twice, and no escalation record. The agent replanned instead of recovering, which breaks the immutable plan. It then had no bounded recovery, which breaks strict escalation. And there is no verdict from a separate layer, so nobody established whether the work was good." },
-        { "t": "note", "x": "A useful failure log records, per attempt: the state, the trigger that moved it, the input, what changed, and whether the fix held. Anything less and the log cannot settle an argument." }
+        {
+          "t": "p",
+          "x": "The gate after Week 6 is not did it work. It is: can you reconstruct the full decision path from memory, state by state? A log you cannot turn into a state sequence means the transitions were never explicit."
+        },
+        {
+          "t": "h",
+          "x": "What the log above proves"
+        },
+        {
+          "t": "p",
+          "x": "Three plans, the same failure twice, and no escalation record. The agent replanned instead of recovering, which breaks the immutable plan. It then had no bounded recovery, which breaks strict escalation. And there is no verdict from a separate layer, so nobody established whether the work was good."
+        },
+        {
+          "t": "note",
+          "x": "A useful failure log records, per attempt: the state, the trigger that moved it, the input, what changed, and whether the fix held. Anything less and the log cannot settle an argument."
+        }
       ],
       "instructions": [
         "Three items about the run log: which commitment broke, what the correct state sequence was, and what the log is missing.",
@@ -897,7 +1343,12 @@
             "Whether the fix held after the retry.",
             "The model temperature."
           ],
-          "answers": [0, 1, 2, 3],
+          "answers": [
+            0,
+            1,
+            2,
+            3
+          ],
           "notes": [
             "Lines without states cannot be assembled into a path.",
             "Without the trigger, a transition looks like a mood rather than a rule.",
@@ -918,11 +1369,32 @@
       "kicker": "Portfolio evidence, not polish",
       "goal": "Know what makes a project count as evidence of understanding.",
       "lesson": [
-        { "t": "p", "x": "The portfolio phase asks for 50 to 100 real documents, a working pipeline, an agent that queries the graph, and an honest failure log. The log is the part that cannot be faked and the part reviewers actually read." },
-        { "t": "h", "x": "The five ways this stalls" },
-        { "t": "ul", "x": ["Skipping the manual extraction phase, so you can run extraction but cannot evaluate it", "Treating resolve as solved, when most errors hide there", "Building only one half, the graph or the agent", "Polishing the demo instead of documenting failure", "Waiting for a graph architect job posting that does not exist yet"] },
-        { "t": "p", "x": "A defensible artifact contains the schema, the prompts, the graph structure, the failure log with named errors and fixes, and the commands to reproduce it. A screenshot of a pretty graph contains none of that." },
-        { "t": "note", "x": "Week 10 gate: is your project better evidence than any credential? If yes, it is done. If it is only prettier, it is a tutorial." }
+        {
+          "t": "p",
+          "x": "The portfolio phase asks for 50 to 100 real documents, a working pipeline, an agent that queries the graph, and an honest failure log. The log is the part that cannot be faked and the part reviewers actually read."
+        },
+        {
+          "t": "h",
+          "x": "The five ways this stalls"
+        },
+        {
+          "t": "ul",
+          "x": [
+            "Skipping the manual extraction phase, so you can run extraction but cannot evaluate it",
+            "Treating resolve as solved, when most errors hide there",
+            "Building only one half, the graph or the agent",
+            "Polishing the demo instead of documenting failure",
+            "Waiting for a graph architect job posting that does not exist yet"
+          ]
+        },
+        {
+          "t": "p",
+          "x": "A defensible artifact contains the schema, the prompts, the graph structure, the failure log with named errors and fixes, and the commands to reproduce it. A screenshot of a pretty graph contains none of that."
+        },
+        {
+          "t": "note",
+          "x": "Week 10 gate: is your project better evidence than any credential? If yes, it is done. If it is only prettier, it is a tutorial."
+        }
       ],
       "instructions": [
         "Two items on what counts as evidence, one on the Week 4 gate.",
@@ -941,7 +1413,11 @@
             "A screenshot of the finished graph.",
             "A certificate from an online course."
           ],
-          "answers": [0, 1, 2],
+          "answers": [
+            0,
+            1,
+            2
+          ],
           "notes": [
             "The log is the artifact that distinguishes a builder from someone who ran a tutorial.",
             "Prompts and schema are the design. A reviewer can critique a design.",
@@ -1000,11 +1476,26 @@
       "kicker": "Precision is cheap, recall is the job",
       "goal": "Score an extraction pass so the number cannot be gamed.",
       "lesson": [
-        { "t": "p", "x": "Two numbers, opposite directions. Precision: of the triples I emitted, how many are right. Recall: of the triples that exist in the source, how many did I find. Report both, with the gold set size, or you are reporting decoration." },
-        { "t": "h", "x": "A small worked case" },
-        { "t": "code", "x": "gold set: 50 triples\nextractor emitted 40, of which 32 are correct\n\nprecision = 32 / 40 = 0.80\nrecall    = 32 / 50 = 0.64" },
-        { "t": "p", "x": "Eight wrong emissions and eighteen missed facts. The missed facts are invisible in the output: nothing tells you what you failed to extract. That asymmetry is why a team that only reads its own output believes it is at 0.95 when it is at 0.64." },
-        { "t": "note", "x": "Build the gold set by hand on 30 documents before tuning anything. Without it every prompt change is a vibe check and every quality claim is unfalsifiable." }
+        {
+          "t": "p",
+          "x": "Two numbers, opposite directions. Precision: of the triples I emitted, how many are right. Recall: of the triples that exist in the source, how many did I find. Report both, with the gold set size, or you are reporting decoration."
+        },
+        {
+          "t": "h",
+          "x": "A small worked case"
+        },
+        {
+          "t": "code",
+          "x": "gold set: 50 triples\nextractor emitted 40, of which 32 are correct\n\nprecision = 32 / 40 = 0.80\nrecall    = 32 / 50 = 0.64"
+        },
+        {
+          "t": "p",
+          "x": "Eight wrong emissions and eighteen missed facts. The missed facts are invisible in the output: nothing tells you what you failed to extract. That asymmetry is why a team that only reads its own output believes it is at 0.95 when it is at 0.64."
+        },
+        {
+          "t": "note",
+          "x": "Build the gold set by hand on 30 documents before tuning anything. Without it every prompt change is a vibe check and every quality claim is unfalsifiable."
+        }
       ],
       "instructions": [
         "One numeric item and two judgement items.",

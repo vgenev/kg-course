@@ -58,3 +58,7 @@ docs/BUILD-SPEC.md       the work order the app was built against
   first item in every part, wrong answers show the correction, retry works, the padded
   triple answer scores 50% instead of 100%, progress survives a reload, review queue and
   drill run, error log records every miss, no console errors.
+
+## Live
+
+https://vgenev.github.io/kg-course/ (GitHub Pages, served from `index.html`)
