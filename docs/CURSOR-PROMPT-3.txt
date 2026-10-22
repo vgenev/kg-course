@@ -1,0 +1,18 @@
+Build round 3 on this repo. Read the "Scratchpad (build round 3)" section at the end of docs/BUILD-SPEC.md and implement it exactly.
+
+Context: the app is built by build.mjs into a single offline HTML file at dist/ and index.html (GitHub Pages serves index.html at the repo root). Existing files: src/app.js (views/state), src/grader.js (do not touch), src/styles.css, src/index.template.html, build.mjs. Content lives in src/data.json which you must NOT edit.
+
+Implement:
+1. Header button that toggles the scratchpad, aria-pressed, state persisted as `scratchOpen` in the existing course state object.
+2. Three-column layout at >=1200px (rail | panel | 420px sticky scratch column, page max-width 1680px at that breakpoint only). Below 1200px the pad renders as the first block inside the panel, above the lesson.
+3. A canvas pad per module keyed by module id, plus one keyed `overview` for the overview view.
+4. Tools: Pen, Node, Edge, Undo, Clear, three theme-derived colour swatches, Save PNG.
+5. Inline label inputs for node and edge (an absolutely positioned input at the click point / midpoint). No modal dialogs, no window.prompt.
+6. Pen uses pointer events with setPointerCapture and touch-action:none; canvas backing store scaled by devicePixelRatio; redraw on resize and on theme change.
+7. Strokes, nodes and edges stored normalized 0..1 and persisted as vector JSON under localStorage key `kg-course-scratch-v1`, guarded with try/catch, with a toolbar notice if a write fails.
+8. Save PNG as specified, filename kg-scratch-<key>.png.
+9. Rebuild both dist/knowledge-graphs-course.html and index.html (index.html is the Pages entry, keep them byte-identical), run `npm test`, and verify the checks in the acceptance list that you can drive yourself. If you cannot exercise a check, say which and why.
+
+Do not change grading, review, drill, error log or the Instructions placement. Do not add dependencies. Match the existing CSS variables, radii (cards 12px, controls 8px) and font stack.
+
+Commit with the message "kg-course: per-part scratchpad with pen, nodes and typed edges". Report: what you implemented, the exact test output, the build size, and every acceptance check with its real result.

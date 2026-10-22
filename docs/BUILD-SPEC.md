@@ -262,3 +262,68 @@ file has none; do not introduce any). Respect `prefers-reduced-motion`.
 - No frameworks, no build tooling beyond the one `build.mjs`, no dependencies, no network.
 - Do not add analytics, service workers, or external fonts.
 - Commit only the files this spec creates.
+
+## Scratchpad (build round 3)
+
+Users work through these exercises by drawing: entities as circles, predicates as arrows.
+Add a scratchpad to the app. It is a study surface, not a graded surface: nothing on it
+affects scores.
+
+**Entry point.** A `Scratchpad` toggle button in the header (`aria-pressed`), keyboard
+reachable. Open/closed state persists in the course state under `scratchOpen` and survives
+reload.
+
+**Placement.** One canvas per part, keyed by module id; the overview has its own pad keyed
+`overview`.
+- Viewport >= 1200px: the shell becomes three columns, rail | panel | scratch column 420px.
+  The scratch column is sticky, its height is the viewport minus the header, and it scrolls
+  internally. Raise the page max-width to 1680px at that breakpoint and nowhere else.
+- Viewport < 1200px: render the scratchpad as the first block INSIDE the panel, above the
+  lesson, so it is reachable without scrolling past content. Never a fixed overlay that
+  covers content.
+
+**Tools.** A compact toolbar: Pen, Node, Undo, Clear, three colour swatches, Save PNG.
+- Pen: freehand. One width (2.5 CSS px). Colours: theme ink, the accent, and a muted grey
+  read from CSS variables, never hardcoded hex.
+- Node tool: click empty canvas and a small inline text input appears at the click point for
+  the node label. Enter commits, Escape cancels, empty cancels. Nodes render as a rounded
+  box with the label centred and a subtle border.
+- Edge tool: drag from one node to another; on release an inline input at the midpoint takes
+  the predicate. Enter commits and draws a line with an arrowhead plus the label at the
+  midpoint, offset above the line. Dragging to the same node or to empty space cancels.
+- Nodes are draggable with the Node tool active; their edges follow.
+- Undo removes the last created element in creation order (stroke, node or edge). Clear
+  empties the active pad after a confirm.
+
+**Drawing mechanics.**
+- Pointer events (`pointerdown` / `pointermove` / `pointerup`), `touch-action: none`, and
+  `setPointerCapture`, so it works with a finger, a pen and a mouse.
+- Canvas backing store scaled by `devicePixelRatio`; redraw on resize and on theme change.
+- Stroke coordinates stored NORMALIZED to 0..1 of the canvas box, so a resize does not
+  distort the drawing.
+
+**Persistence.** Vector, not raster. `localStorage` key `kg-course-scratch-v1`:
+
+```
+{ [padKey]: { strokes: [{c: 'ink'|'accent'|'muted', pts: [[x,y], ...]}],
+              nodes:  [{id, x, y, label}],
+              edges:  [{from, to, label}] } }
+```
+
+Coordinates normalized 0..1. Guarded with try/catch exactly like the course state. If a
+write throws (quota), stop persisting and show a one-line notice in the toolbar rather than
+failing silently.
+
+**Save PNG.** Renders the active pad onto an offscreen 2x canvas with the page background
+filled, then downloads `kg-scratch-<key>.png`.
+
+**Acceptance.** All are behaviour checks, not source checks:
+1. Toggle opens and closes the pad, and the state survives a reload.
+2. A synthetic drag with the Pen tool creates a stroke, and after a reload the canvas is not
+   blank: `getImageData` contains pixels differing from the background.
+3. Node tool creates a labelled node; edge tool creates an edge between two nodes with a
+   label and an arrowhead.
+4. Undo removes exactly the last element; Clear empties the pad.
+5. Save PNG produces a download whose size is non-trivial.
+6. No console errors at 1440x900 (three columns) and at 900x800 (pad above the lesson).
+7. Nothing in the existing grading, review, drill or error log paths changes behaviour.
