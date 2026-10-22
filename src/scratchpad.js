@@ -4,9 +4,10 @@
   const pads = {};
   const history = {};
   let nextNodeId = 1;
+  let nextTextId = 1;
 
   function emptyPad() {
-    return { strokes: [], nodes: [], edges: [] };
+    return { strokes: [], nodes: [], edges: [], texts: [] };
   }
 
   function loadPads() {
@@ -21,11 +22,16 @@
                 strokes: Array.isArray(v.strokes) ? v.strokes : [],
                 nodes: Array.isArray(v.nodes) ? v.nodes : [],
                 edges: Array.isArray(v.edges) ? v.edges : [],
+                texts: Array.isArray(v.texts) ? v.texts : [],
               };
               history[k] = [];
               for (const n of pads[k].nodes) {
                 const m = /^n(\d+)$/.exec(n.id);
                 if (m) nextNodeId = Math.max(nextNodeId, parseInt(m[1], 10) + 1);
+              }
+              for (const t of pads[k].texts) {
+                const m = /^t(\d+)$/.exec(t.id);
+                if (m) nextTextId = Math.max(nextTextId, parseInt(m[1], 10) + 1);
               }
             }
           }
@@ -41,7 +47,12 @@
     try {
       const out = {};
       for (const [k, v] of Object.entries(pads)) {
-        out[k] = { strokes: v.strokes, nodes: v.nodes, edges: v.edges };
+        out[k] = {
+          strokes: v.strokes,
+          nodes: v.nodes,
+          edges: v.edges,
+          texts: v.texts,
+        };
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
       return true;
@@ -57,6 +68,7 @@
       history[key] = [];
     }
     if (!history[key]) history[key] = [];
+    if (!Array.isArray(pads[key].texts)) pads[key].texts = [];
     return pads[key];
   }
 
@@ -82,6 +94,70 @@
     return colors.ink;
   }
 
+  function segmentBoxHits(ax, ay, bx, by, rect) {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const { left, right, top, bottom } = rect;
+    const eps = 1e-6;
+    const hits = [];
+    function add(t) {
+      if (t < -eps || t > 1 + eps) return;
+      const x = ax + t * dx;
+      const y = ay + t * dy;
+      if (
+        x >= left - eps &&
+        x <= right + eps &&
+        y >= top - eps &&
+        y <= bottom + eps
+      ) {
+        hits.push({ t: Math.max(0, Math.min(1, t)), x, y });
+      }
+    }
+    if (Math.abs(dx) > 1e-9) {
+      add((left - ax) / dx);
+      add((right - ax) / dx);
+    }
+    if (Math.abs(dy) > 1e-9) {
+      add((top - ay) / dy);
+      add((bottom - ay) / dy);
+    }
+    hits.sort((a, b) => a.t - b.t);
+    const uniq = [];
+    for (const h of hits) {
+      if (
+        !uniq.length ||
+        Math.hypot(h.x - uniq[uniq.length - 1].x, h.y - uniq[uniq.length - 1].y) >
+          0.5
+      ) {
+        uniq.push(h);
+      }
+    }
+    return uniq;
+  }
+
+  function boxExitToward(ax, ay, bx, by, rect) {
+    const hits = segmentBoxHits(ax, ay, bx, by, rect);
+    if (!hits.length) return { x: ax, y: ay };
+    const inside =
+      ax >= rect.left &&
+      ax <= rect.right &&
+      ay >= rect.top &&
+      ay <= rect.bottom;
+    if (inside) {
+      for (const h of hits) {
+        if (h.t > 1e-5) return h;
+      }
+      return hits[hits.length - 1];
+    }
+    return hits[0];
+  }
+
+  function boxEntryToward(ax, ay, bx, by, rect) {
+    const hits = segmentBoxHits(ax, ay, bx, by, rect);
+    if (!hits.length) return { x: bx, y: by };
+    return hits[0];
+  }
+
   function mount(container, padKey) {
     container.innerHTML = '';
     const data = padData(padKey);
@@ -94,6 +170,7 @@
     let edgeDrag = null;
     let nodeDrag = null;
     let inlineInput = null;
+    let eraserHover = null;
 
     const wrap = document.createElement('div');
     wrap.className = 'scratch-widget';
@@ -112,6 +189,7 @@
 
     function setTool(t) {
       tool = t;
+      eraserHover = null;
       toolbar.querySelectorAll('[data-tool]').forEach((btn) => {
         btn.setAttribute(
           'aria-pressed',
@@ -134,6 +212,8 @@
     toolbar.appendChild(makeToolBtn('Pen', 'pen'));
     toolbar.appendChild(makeToolBtn('Node', 'node'));
     toolbar.appendChild(makeToolBtn('Edge', 'edge'));
+    toolbar.appendChild(makeToolBtn('Text', 'text'));
+    toolbar.appendChild(makeToolBtn('Eraser', 'eraser'));
 
     const undoBtn = document.createElement('button');
     undoBtn.type = 'button';
@@ -152,6 +232,8 @@
         );
       } else if (last.type === 'edge') {
         data.edges.pop();
+      } else if (last.type === 'text') {
+        data.texts = data.texts.filter((t) => t.id !== last.id);
       }
       savePads() || showPersistFail();
       redraw();
@@ -167,6 +249,7 @@
       data.strokes = [];
       data.nodes = [];
       data.edges = [];
+      data.texts = [];
       history[padKey] = [];
       savePads() || showPersistFail();
       redraw();
@@ -282,10 +365,22 @@
       ctx2.closePath();
     }
 
-    function drawEdge(ctx2, e, theme) {
-      const from = data.nodes.find((n) => n.id === e.from);
-      const to = data.nodes.find((n) => n.id === e.to);
-      if (!from || !to) return;
+    function nodeRectPx(n, ctx2) {
+      const p = px(n.x, n.y);
+      const { w, h } = measureNode(ctx2, n.label || '');
+      return {
+        cx: p.x,
+        cy: p.y,
+        w,
+        h,
+        left: p.x - w / 2,
+        right: p.x + w / 2,
+        top: p.y - h / 2,
+        bottom: p.y + h / 2,
+      };
+    }
+
+    function computeEdgeGeom(from, to, ctx2) {
       const a = px(from.x, from.y);
       const b = px(to.x, to.y);
       const dx = b.x - a.x;
@@ -293,44 +388,215 @@
       const len = Math.hypot(dx, dy) || 1;
       const ux = dx / len;
       const uy = dy / len;
-      const shrink = 14;
-      const x1 = a.x + ux * shrink;
-      const y1 = a.y + uy * shrink;
-      const x2 = b.x - ux * shrink;
-      const y2 = b.y - uy * shrink;
+      const srcRect = nodeRectPx(from, ctx2);
+      const tgtRect = nodeRectPx(to, ctx2);
+      const start = boxExitToward(a.x, a.y, b.x, b.y, srcRect);
+      const entry = boxEntryToward(a.x, a.y, b.x, b.y, tgtRect);
+      const outNx = entry.x - tgtRect.cx;
+      const outNy = entry.y - tgtRect.cy;
+      const outLen = Math.hypot(outNx, outNy) || 1;
+      const midX = (start.x + entry.x) / 2;
+      const midY = (start.y + entry.y) / 2;
+      const entryAlong = (entry.x - start.x) * ux + (entry.y - start.y) * uy;
+      let tipX = entry.x + (outNx / outLen) * 3;
+      let tipY = entry.y + (outNy / outLen) * 3;
+      const tipAlong = (tipX - start.x) * ux + (tipY - start.y) * uy;
+      if (entryAlong < 1e-3 || tipAlong > entryAlong / 2 + 0.5) {
+        tipX = midX;
+        tipY = midY;
+      }
+      const headLen = 9;
+      const lineEndX = tipX - ux * headLen;
+      const lineEndY = tipY - uy * headLen;
+      return {
+        x1: start.x,
+        y1: start.y,
+        x2: lineEndX,
+        y2: lineEndY,
+        tipX,
+        tipY,
+        ux,
+        uy,
+        a,
+        b,
+      };
+    }
 
+    function drawEdgeShaft(ctx2, e, theme) {
+      const from = data.nodes.find((n) => n.id === e.from);
+      const to = data.nodes.find((n) => n.id === e.to);
+      if (!from || !to) return;
+      const g = computeEdgeGeom(from, to, ctx2);
       ctx2.strokeStyle = theme.ink;
-      ctx2.fillStyle = theme.ink;
       ctx2.lineWidth = 1.5;
       ctx2.beginPath();
-      ctx2.moveTo(x1, y1);
-      ctx2.lineTo(x2, y2);
+      ctx2.moveTo(g.x1, g.y1);
+      ctx2.lineTo(g.x2, g.y2);
       ctx2.stroke();
-
-      const ah = 8;
-      const ax = x2 - ux * ah + (-uy) * (ah * 0.45);
-      const ay = y2 - uy * ah + ux * (ah * 0.45);
-      const bx = x2 - ux * ah - (-uy) * (ah * 0.45);
-      const by = y2 - uy * ah - ux * (ah * 0.45);
-      ctx2.beginPath();
-      ctx2.moveTo(x2, y2);
-      ctx2.lineTo(ax, ay);
-      ctx2.lineTo(bx, by);
-      ctx2.closePath();
-      ctx2.fill();
-
       if (e.label) {
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
+        const mx = (g.a.x + g.b.x) / 2;
+        const my = (g.a.y + g.b.y) / 2;
         const off = 12;
-        const lx = mx + (-uy) * off;
-        const ly = my + ux * off;
+        const lx = mx + (-g.uy) * off;
+        const ly = my + g.ux * off;
         ctx2.font =
           '11px ' + getComputedStyle(document.documentElement).fontFamily;
         ctx2.textAlign = 'center';
         ctx2.textBaseline = 'middle';
         ctx2.fillStyle = theme.ink;
         ctx2.fillText(e.label, lx, ly);
+      }
+    }
+
+    function drawEdgeHead(ctx2, e, theme) {
+      const from = data.nodes.find((n) => n.id === e.from);
+      const to = data.nodes.find((n) => n.id === e.to);
+      if (!from || !to) return;
+      const g = computeEdgeGeom(from, to, ctx2);
+      const { tipX, tipY, ux, uy } = g;
+      const headLen = 9;
+      const halfW = 4;
+      const bx = tipX - ux * headLen;
+      const by = tipY - uy * headLen;
+      ctx2.fillStyle = theme.ink;
+      ctx2.beginPath();
+      ctx2.moveTo(tipX, tipY);
+      ctx2.lineTo(bx + (-uy) * halfW, by + ux * halfW);
+      ctx2.lineTo(bx - (-uy) * halfW, by - ux * halfW);
+      ctx2.closePath();
+      ctx2.fill();
+    }
+
+    function drawTextAnn(ctx2, t, theme) {
+      const p = px(t.x, t.y);
+      ctx2.font =
+        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx2.fillStyle = theme.ink;
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(t.label || '', p.x, p.y);
+    }
+
+    function textBoundsPx(t, ctx2) {
+      const p = px(t.x, t.y);
+      ctx2.font =
+        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      const tw = ctx2.measureText(t.label || '').width;
+      const pad = 4;
+      return {
+        left: p.x - tw / 2 - pad,
+        right: p.x + tw / 2 + pad,
+        top: p.y - 8,
+        bottom: p.y + 8,
+      };
+    }
+
+    function textAtNorm(nx, ny) {
+      const f =
+        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx.font = f;
+      for (let i = data.texts.length - 1; i >= 0; i--) {
+        const t = data.texts[i];
+        const b = textBoundsPx(t, ctx);
+        const px = nx * cssW;
+        const py = ny * cssH;
+        if (px >= b.left && px <= b.right && py >= b.top && py <= b.bottom) {
+          return t;
+        }
+      }
+      return null;
+    }
+
+    function distPointSeg(pxx, pyy, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len2 = dx * dx + dy * dy;
+      if (len2 < 1e-9) return Math.hypot(pxx - x1, pyy - y1);
+      let t = ((pxx - x1) * dx + (pyy - y1) * dy) / len2;
+      t = Math.max(0, Math.min(1, t));
+      const qx = x1 + t * dx;
+      const qy = y1 + t * dy;
+      return Math.hypot(pxx - qx, pyy - qy);
+    }
+
+    function hitTestEraser(nx, ny) {
+      const pxx = nx * cssW;
+      const pyy = ny * cssH;
+      const t = textAtNorm(nx, ny);
+      if (t) return { kind: 'text', id: t.id, ref: t };
+      const n = nodeAt(nx, ny);
+      if (n) return { kind: 'node', id: n.id, ref: n };
+      for (let i = data.edges.length - 1; i >= 0; i--) {
+        const e = data.edges[i];
+        const from = data.nodes.find((nd) => nd.id === e.from);
+        const to = data.nodes.find((nd) => nd.id === e.to);
+        if (!from || !to) continue;
+        const g = computeEdgeGeom(from, to, ctx);
+        const d = distPointSeg(pxx, pyy, g.x1, g.y1, g.tipX, g.tipY);
+        if (d <= 8) return { kind: 'edge', index: i, ref: e };
+      }
+      for (let i = data.strokes.length - 1; i >= 0; i--) {
+        const s = data.strokes[i];
+        if (!s.pts || s.pts.length < 2) continue;
+        for (let j = 1; j < s.pts.length; j++) {
+          const a = px(s.pts[j - 1][0], s.pts[j - 1][1]);
+          const b = px(s.pts[j][0], s.pts[j][1]);
+          if (distPointSeg(pxx, pyy, a.x, a.y, b.x, b.y) <= 6) {
+            return { kind: 'stroke', index: i, ref: s };
+          }
+        }
+      }
+      return null;
+    }
+
+    function deleteEraserTarget(target) {
+      if (!target) return;
+      if (target.kind === 'text') {
+        data.texts = data.texts.filter((t) => t.id !== target.id);
+      } else if (target.kind === 'node') {
+        data.nodes = data.nodes.filter((n) => n.id !== target.id);
+        data.edges = data.edges.filter(
+          (e) => e.from !== target.id && e.to !== target.id
+        );
+      } else if (target.kind === 'edge') {
+        data.edges.splice(target.index, 1);
+      } else if (target.kind === 'stroke') {
+        data.strokes.splice(target.index, 1);
+      }
+    }
+
+    function drawEraserHover(ctx2, target, theme) {
+      if (!target) return;
+      ctx2.strokeStyle = theme.accent;
+      ctx2.lineWidth = 1;
+      if (target.kind === 'text') {
+        const b = textBoundsPx(target.ref, ctx2);
+        ctx2.strokeRect(b.left, b.top, b.right - b.left, b.bottom - b.top);
+      } else if (target.kind === 'node') {
+        const r = nodeRectPx(target.ref, ctx2);
+        ctx2.strokeRect(r.left, r.top, r.w, r.h);
+      } else if (target.kind === 'edge') {
+        const from = data.nodes.find((n) => n.id === target.ref.from);
+        const to = data.nodes.find((n) => n.id === target.ref.to);
+        if (!from || !to) return;
+        const g = computeEdgeGeom(from, to, ctx2);
+        ctx2.beginPath();
+        ctx2.moveTo(g.x1, g.y1);
+        ctx2.lineTo(g.tipX, g.tipY);
+        ctx2.stroke();
+      } else if (target.kind === 'stroke') {
+        const s = target.ref;
+        if (!s.pts || s.pts.length < 2) return;
+        ctx2.lineCap = 'round';
+        ctx2.lineJoin = 'round';
+        ctx2.beginPath();
+        const first = px(s.pts[0][0], s.pts[0][1]);
+        ctx2.moveTo(first.x, first.y);
+        for (let i = 1; i < s.pts.length; i++) {
+          const p = px(s.pts[i][0], s.pts[i][1]);
+          ctx2.lineTo(p.x, p.y);
+        }
+        ctx2.stroke();
       }
     }
 
@@ -362,8 +628,11 @@
       const scale = canvas.width / cssW;
       ctx.scale(scale, scale);
       for (const s of data.strokes) drawStroke(ctx, s, theme);
-      for (const e of data.edges) drawEdge(ctx, e, theme);
+      for (const e of data.edges) drawEdgeShaft(ctx, e, theme);
       for (const n of data.nodes) drawNode(ctx, n, theme);
+      for (const t of data.texts) drawTextAnn(ctx, t, theme);
+      for (const e of data.edges) drawEdgeHead(ctx, e, theme);
+      if (eraserHover) drawEraserHover(ctx, eraserHover, theme);
       if (currentStroke && currentStroke.pts.length) {
         drawStroke(ctx, currentStroke, theme);
       }
@@ -509,6 +778,39 @@
           canvas.setPointerCapture(ev.pointerId);
           edgeDrag = { fromId: hit.id, from: hit, x: pt.x, y: pt.y };
         }
+      } else if (tool === 'text') {
+        const hit = textAtNorm(pt.x, pt.y);
+        const clickX = ev.clientX;
+        const clickY = ev.clientY;
+        const nx = pt.x;
+        const ny = pt.y;
+        setTimeout(() => {
+          showInlineInput(
+            clickX,
+            clickY,
+            hit ? hit.label : '',
+            (label) => {
+              if (hit) {
+                hit.label = label;
+              } else {
+                const id = 't' + nextTextId++;
+                data.texts.push({ id, x: nx, y: ny, label });
+                pushHistory(padKey, { type: 'text', id });
+              }
+              persist();
+              redraw();
+            },
+            () => redraw()
+          );
+        }, 0);
+      } else if (tool === 'eraser') {
+        const target = hitTestEraser(pt.x, pt.y);
+        if (target) {
+          deleteEraserTarget(target);
+          eraserHover = null;
+          persist();
+          redraw();
+        }
       }
     });
 
@@ -541,6 +843,9 @@
       } else if (tool === 'edge' && edgeDrag) {
         edgeDrag.x = pt.x;
         edgeDrag.y = pt.y;
+        redraw();
+      } else if (tool === 'eraser') {
+        eraserHover = hitTestEraser(pt.x, pt.y);
         redraw();
       }
     });
@@ -704,10 +1009,23 @@
       ctx2.closePath();
     }
 
-    function drawEdge2(e) {
-      const from = data.nodes.find((n) => n.id === e.from);
-      const to = data.nodes.find((n) => n.id === e.to);
-      if (!from || !to) return;
+    function nodeRectPx2(n) {
+      const p = px2(n.x, n.y);
+      ctx.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      const tw = ctx.measureText(n.label || '').width;
+      const bw = Math.max(tw + 16, 40);
+      const bh = 24;
+      return {
+        cx: p.x,
+        cy: p.y,
+        left: p.x - bw / 2,
+        right: p.x + bw / 2,
+        top: p.y - bh / 2,
+        bottom: p.y + bh / 2,
+      };
+    }
+
+    function computeEdgeGeom2(from, to) {
       const a = px2(from.x, from.y);
       const b = px2(to.x, to.y);
       const dx = b.x - a.x;
@@ -715,40 +1033,93 @@
       const len = Math.hypot(dx, dy) || 1;
       const ux = dx / len;
       const uy = dy / len;
-      const shrink = 14;
-      const x1 = a.x + ux * shrink;
-      const y1 = a.y + uy * shrink;
-      const x2 = b.x - ux * shrink;
-      const y2 = b.y - uy * shrink;
+      const srcRect = nodeRectPx2(from);
+      const tgtRect = nodeRectPx2(to);
+      const start = boxExitToward(a.x, a.y, b.x, b.y, srcRect);
+      const entry = boxEntryToward(a.x, a.y, b.x, b.y, tgtRect);
+      const outNx = entry.x - tgtRect.cx;
+      const outNy = entry.y - tgtRect.cy;
+      const outLen = Math.hypot(outNx, outNy) || 1;
+      const midX = (start.x + entry.x) / 2;
+      const midY = (start.y + entry.y) / 2;
+      const entryAlong = (entry.x - start.x) * ux + (entry.y - start.y) * uy;
+      let tipX = entry.x + (outNx / outLen) * 3;
+      let tipY = entry.y + (outNy / outLen) * 3;
+      const tipAlong = (tipX - start.x) * ux + (tipY - start.y) * uy;
+      if (entryAlong < 1e-3 || tipAlong > entryAlong / 2 + 0.5) {
+        tipX = midX;
+        tipY = midY;
+      }
+      const headLen = 9;
+      return {
+        x1: start.x,
+        y1: start.y,
+        x2: tipX - ux * headLen,
+        y2: tipY - uy * headLen,
+        tipX,
+        tipY,
+        ux,
+        uy,
+        a,
+        b,
+      };
+    }
+
+    function drawEdgeShaft2(e) {
+      const from = data.nodes.find((n) => n.id === e.from);
+      const to = data.nodes.find((n) => n.id === e.to);
+      if (!from || !to) return;
+      const g = computeEdgeGeom2(from, to);
       ctx.strokeStyle = theme.ink;
-      ctx.fillStyle = theme.ink;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.moveTo(g.x1, g.y1);
+      ctx.lineTo(g.x2, g.y2);
       ctx.stroke();
-      const ah = 8;
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - ux * ah + (-uy) * (ah * 0.45), y2 - uy * ah + ux * (ah * 0.45));
-      ctx.lineTo(x2 - ux * ah - (-uy) * (ah * 0.45), y2 - uy * ah - ux * (ah * 0.45));
-      ctx.closePath();
-      ctx.fill();
       if (e.label) {
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
+        const mx = (g.a.x + g.b.x) / 2;
+        const my = (g.a.y + g.b.y) / 2;
         const offN = 12;
         ctx.font = '11px ' + getComputedStyle(document.documentElement).fontFamily;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = theme.ink;
-        ctx.fillText(e.label, mx + (-uy) * offN, my + ux * offN);
+        ctx.fillText(e.label, mx + (-g.uy) * offN, my + g.ux * offN);
       }
     }
 
+    function drawEdgeHead2(e) {
+      const from = data.nodes.find((n) => n.id === e.from);
+      const to = data.nodes.find((n) => n.id === e.to);
+      if (!from || !to) return;
+      const g = computeEdgeGeom2(from, to);
+      const headLen = 9;
+      const halfW = 4;
+      const bx = g.tipX - g.ux * headLen;
+      const by = g.tipY - g.uy * headLen;
+      ctx.fillStyle = theme.ink;
+      ctx.beginPath();
+      ctx.moveTo(g.tipX, g.tipY);
+      ctx.lineTo(bx + (-g.uy) * halfW, by + g.ux * halfW);
+      ctx.lineTo(bx - (-g.uy) * halfW, by - g.ux * halfW);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawText2(t) {
+      const p = px2(t.x, t.y);
+      ctx.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx.fillStyle = theme.ink;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(t.label || '', p.x, p.y);
+    }
+
     for (const s of data.strokes) drawStroke2(s);
-    for (const e of data.edges) drawEdge2(e);
+    for (const e of data.edges) drawEdgeShaft2(e);
     for (const n of data.nodes) drawNode2(n);
+    for (const t of data.texts) drawText2(t);
+    for (const e of data.edges) drawEdgeHead2(e);
 
     off.toBlob((blob) => {
       if (!blob) return;
