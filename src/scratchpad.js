@@ -622,6 +622,7 @@
 
     if (!scratchPersistOk) showPersistFail();
 
+    resize();
     scheduleResize();
 
     return function destroy() {

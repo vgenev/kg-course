@@ -3557,6 +3557,7 @@ body {
 
     if (!scratchPersistOk) showPersistFail();
 
+    resize();
     scheduleResize();
 
     return function destroy() {
@@ -4897,6 +4898,9 @@ body {
   }
 
   loadState();
+  window
+    .matchMedia('(min-width: 1200px)')
+    .addEventListener('change', () => render());
   render();
 })();
 

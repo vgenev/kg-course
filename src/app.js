@@ -1192,5 +1192,8 @@
   }
 
   loadState();
+  window
+    .matchMedia('(min-width: 1200px)')
+    .addEventListener('change', () => render());
   render();
 })();
