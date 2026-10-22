@@ -61,4 +61,15 @@ docs/BUILD-SPEC.md       the work order the app was built against
 
 ## Live
 
-https://vgenev.github.io/kg-course/ (GitHub Pages, served from `index.html`)
+https://vgenev.github.io/kg-course/
+
+Built and deployed by GitHub Actions (`.github/workflows/pages.yml`) on every push to
+`main`: the workflow runs `npm test`, builds the single file from `src/`, checks the output
+for external URLs and unreplaced build tokens, then deploys it to Pages. Nothing generated
+is committed, so the site cannot drift from the sources.
+
+Local build is the same two commands:
+
+```bash
+npm test && node build.mjs     # writes dist/knowledge-graphs-course.html
+```

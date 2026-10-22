@@ -1,0 +1,64 @@
+name: build-and-deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Test the grading engine
+        run: npm test
+
+      - name: Build the single-file course
+        run: node build.mjs
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site
+          cp dist/knowledge-graphs-course.html _site/index.html
+          # A copy under its descriptive name as well, so the file can be
+          # linked or downloaded directly without the index.html alias.
+          cp dist/knowledge-graphs-course.html _site/knowledge-graphs-course.html
+          ls -l _site
+
+      - name: Fail if the build leaked a network dependency
+        run: |
+          if grep -qE 'https?://' _site/index.html; then
+            echo "external URL found in the built file"; exit 1
+          fi
+          if grep -q '__DATA__\|__STYLES__\|__GRADER__\|__APP__' _site/index.html; then
+            echo "unreplaced build token"; exit 1
+          fi
+          echo "clean: no external URLs, no tokens"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
