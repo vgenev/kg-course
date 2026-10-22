@@ -327,3 +327,48 @@ filled, then downloads `kg-scratch-<key>.png`.
 5. Save PNG produces a download whose size is non-trivial.
 6. No console errors at 1440x900 (three columns) and at 900x800 (pad above the lesson).
 7. Nothing in the existing grading, review, drill or error log paths changes behaviour.
+
+## Scratchpad round 4: arrows, per-element delete, text
+
+Three defects reported by the user, all reproduced in source:
+
+1. **Arrowheads are invisible.** `drawEdge` ends the line 14px from the target node's CENTRE
+   and draws the head there, then node boxes are painted over it. For any horizontal edge the
+   node box (half-width ~20-50px) fully covers the head.
+2. **No way to delete one element.** Only Undo (last created) and Clear (everything) exist.
+3. **No text tool.** The pad can draw strokes, nodes and edges, but cannot write a free
+   annotation, which is what a person actually does first on paper.
+
+### Required
+
+**Arrow geometry.** Compute where the centre-to-centre line crosses the target node's box and
+put the arrow TIP at that crossing offset outward by 3px. Arrowhead length 9px, half-width
+4px, filled, same colour as the edge. Draw in a second pass AFTER nodes so nothing can cover
+it. Short edges (nodes almost touching) must still render a visible head: clamp the tip to the
+midpoint of the visible line if the box crossing falls beyond it.
+
+**Eraser tool.** New toolbar tool (`Eraser`). Click deletes the topmost element under the
+pointer, hit-tested in this order: text, node, edge, stroke.
+- Deleting a node also deletes every edge attached to it.
+- Hit tolerance: 8px for edges and 6px for strokes, so a thin line is clickable.
+- Hovering with the Eraser outlines the element that would be deleted (1px accent), so the
+  user can see the target before committing.
+- Deleted elements are removed from the persisted pad, not just from the canvas.
+
+**Text tool.** New toolbar tool (`Text`). Click opens the same inline input at the click point;
+Enter commits a free text annotation, Escape cancels, empty cancels. Text renders in theme ink,
+12px, centred on the point, no box and no border, visually distinct from a node. Clicking an
+existing text with the Text tool re-opens the input pre-filled for editing.
+
+**Storage.** Pads gain `texts: [{id, x, y, label}]` alongside strokes, nodes and edges. Missing
+`texts` on an old pad means empty. All coordinates stay normalized 0..1.
+
+**Acceptance**, all driven with real input and reported with numbers:
+1. Horizontal edge between two nodes: arrowhead visible, i.e. at least 20 non-background
+   pixels inside a 16x16 box centred on the computed tip, and the tip lies OUTSIDE the target
+   node's box.
+2. Eraser click on an edge midpoint removes exactly one edge; both nodes still exist; the
+   persisted JSON reflects it.
+3. Eraser click on a node removes the node AND its edges.
+4. Text tool commits a label; it is in the stored `texts` array; after reload it re-renders.
+5. No regressions: pen stroke, node drag, per-part pads, pad at 900px, grading (npm test).
