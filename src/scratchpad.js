@@ -351,6 +351,9 @@
     }
 
     function redraw() {
+      if (cssW <= 0 || cssH <= 0 || canvas.width <= 0 || canvas.height <= 0) {
+        return;
+      }
       const theme = readThemeColors();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -379,10 +382,23 @@
       }
     }
 
+    let resizeRaf = 0;
+
+    function scheduleResize() {
+      if (resizeRaf) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = 0;
+        resize();
+      });
+    }
+
     function resize() {
-      const r = canvasWrap.getBoundingClientRect();
-      const newW = Math.max(1, r.width);
-      const newH = Math.max(1, r.height);
+      const newW = canvasWrap.clientWidth;
+      const newH = canvasWrap.clientHeight;
+      if (newW <= 0 || newH <= 0) {
+        scheduleResize();
+        return;
+      }
       const dpr = window.devicePixelRatio || 1;
       const newCw = Math.round(newW * dpr);
       const newCh = Math.round(newH * dpr);
@@ -398,8 +414,8 @@
       cssH = newH;
       canvas.width = newCw;
       canvas.height = newCh;
-      canvas.style.width = cssW + 'px';
-      canvas.style.height = cssH + 'px';
+      canvas.style.width = newW + 'px';
+      canvas.style.height = newH + 'px';
       redraw();
     }
 
@@ -595,7 +611,7 @@
       redraw();
     });
 
-    const ro = new ResizeObserver(() => resize());
+    const ro = new ResizeObserver(() => scheduleResize());
     ro.observe(canvasWrap);
 
     const themeObs = new MutationObserver(() => redraw());
@@ -606,9 +622,13 @@
 
     if (!scratchPersistOk) showPersistFail();
 
-    resize();
+    scheduleResize();
 
     return function destroy() {
+      if (resizeRaf) {
+        cancelAnimationFrame(resizeRaf);
+        resizeRaf = 0;
+      }
       ro.disconnect();
       themeObs.disconnect();
       removeInlineInput();

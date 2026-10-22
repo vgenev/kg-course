@@ -22,17 +22,16 @@
     );
   }
 
-  function mountScratchBlock(container, padKey) {
+  function buildScratchBlock(container) {
     const block = el('div', { className: 'scratch-block' });
     block.appendChild(el('h2', { className: 'scratch-heading', text: 'Scratchpad' }));
     const mountPt = el('div', { className: 'scratch-mount' });
     block.appendChild(mountPt);
     container.appendChild(block);
-    if (scratchUnmount) scratchUnmount();
-    scratchUnmount = window.KGScratchpad.mount(mountPt, padKey);
+    return mountPt;
   }
 
-  function mountScratchColumn(shell, padKey) {
+  function buildScratchColumn(shell) {
     const aside = el('aside', {
       className: 'scratch-column',
       'aria-label': 'Scratchpad',
@@ -43,6 +42,10 @@
     inner.appendChild(mountPt);
     aside.appendChild(inner);
     shell.appendChild(aside);
+    return mountPt;
+  }
+
+  function attachScratchMount(mountPt, padKey) {
     if (scratchUnmount) scratchUnmount();
     scratchUnmount = window.KGScratchpad.mount(mountPt, padKey);
   }
@@ -1163,9 +1166,10 @@
     const shell = el('div', { className: shellClass });
     renderRail(shell);
     const panel = el('main', { className: 'panel' });
+    let scratchMountPt = null;
 
     if (showScratch && !wideScratch) {
-      mountScratchBlock(panel, padKey);
+      scratchMountPt = buildScratchBlock(panel);
     }
 
     if (view.kind === 'overview') renderOverview(panel);
@@ -1178,9 +1182,13 @@
 
     shell.appendChild(panel);
     if (showScratch && wideScratch) {
-      mountScratchColumn(shell, padKey);
+      scratchMountPt = buildScratchColumn(shell);
     }
     root.appendChild(shell);
+
+    if (scratchMountPt) {
+      attachScratchMount(scratchMountPt, padKey);
+    }
   }
 
   loadState();
