@@ -400,12 +400,13 @@
       const entryAlong = (entry.x - start.x) * ux + (entry.y - start.y) * uy;
       let tipX = entry.x + (outNx / outLen) * 3;
       let tipY = entry.y + (outNy / outLen) * 3;
-      const tipAlong = (tipX - start.x) * ux + (tipY - start.y) * uy;
-      if (entryAlong < 1e-3 || tipAlong > entryAlong / 2 + 0.5) {
+      const headLen = 9;
+      // Only clamp when the visible gap cannot hold a head; otherwise the head
+      // lands at the midpoint of every edge, which reads as no arrow at all.
+      if (entryAlong <= headLen + 2 || entryAlong > len) {
         tipX = midX;
         tipY = midY;
       }
-      const headLen = 9;
       const lineEndX = tipX - ux * headLen;
       const lineEndY = tipY - uy * headLen;
       return {
@@ -1045,12 +1046,13 @@
       const entryAlong = (entry.x - start.x) * ux + (entry.y - start.y) * uy;
       let tipX = entry.x + (outNx / outLen) * 3;
       let tipY = entry.y + (outNy / outLen) * 3;
-      const tipAlong = (tipX - start.x) * ux + (tipY - start.y) * uy;
-      if (entryAlong < 1e-3 || tipAlong > entryAlong / 2 + 0.5) {
+      const headLen = 9;
+      // Only clamp when the visible gap cannot hold a head; otherwise the head
+      // lands at the midpoint of every edge, which reads as no arrow at all.
+      if (entryAlong <= headLen + 2 || entryAlong > len) {
         tipX = midX;
         tipY = midY;
       }
-      const headLen = 9;
       return {
         x1: start.x,
         y1: start.y,
