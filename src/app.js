@@ -8,9 +8,47 @@
   let view = { kind: 'overview' };
   let drill = null;
   let focusExerciseId = null;
+  let scratchUnmount = null;
+
+  function scratchPadKey() {
+    if (view.kind === 'module') return view.id;
+    return 'overview';
+  }
+
+  function scratchVisibleForView() {
+    return (
+      state.scratchOpen &&
+      (view.kind === 'overview' || view.kind === 'module')
+    );
+  }
+
+  function mountScratchBlock(container, padKey) {
+    const block = el('div', { className: 'scratch-block' });
+    block.appendChild(el('h2', { className: 'scratch-heading', text: 'Scratchpad' }));
+    const mountPt = el('div', { className: 'scratch-mount' });
+    block.appendChild(mountPt);
+    container.appendChild(block);
+    if (scratchUnmount) scratchUnmount();
+    scratchUnmount = window.KGScratchpad.mount(mountPt, padKey);
+  }
+
+  function mountScratchColumn(shell, padKey) {
+    const aside = el('aside', {
+      className: 'scratch-column',
+      'aria-label': 'Scratchpad',
+    });
+    const inner = el('div', { className: 'scratch-column-inner' });
+    inner.appendChild(el('h2', { className: 'scratch-heading', text: 'Scratchpad' }));
+    const mountPt = el('div', { className: 'scratch-mount' });
+    inner.appendChild(mountPt);
+    aside.appendChild(inner);
+    shell.appendChild(aside);
+    if (scratchUnmount) scratchUnmount();
+    scratchUnmount = window.KGScratchpad.mount(mountPt, padKey);
+  }
 
   function defaultState() {
-    return { v: 1, rec: {}, log: [], theme: 'dark' };
+    return { v: 1, rec: {}, log: [], theme: 'dark', scratchOpen: false };
   }
 
   function loadState() {
@@ -24,6 +62,7 @@
             rec: parsed.rec || {},
             log: Array.isArray(parsed.log) ? parsed.log : [],
             theme: parsed.theme === 'light' ? 'light' : 'dark',
+            scratchOpen: !!parsed.scratchOpen,
           };
         }
       }
@@ -1021,6 +1060,7 @@
             rec: parsed.rec || {},
             log: parsed.log || [],
             theme: parsed.theme === 'light' ? 'light' : 'dark',
+            scratchOpen: !!parsed.scratchOpen,
           };
           document.documentElement.setAttribute('data-theme', state.theme);
           saveState();
@@ -1061,9 +1101,21 @@
   }
 
   function render() {
+    if (scratchUnmount) {
+      scratchUnmount();
+      scratchUnmount = null;
+    }
+
     const root = document.getElementById('app');
     root.innerHTML = '';
+    const wideScratch =
+      window.matchMedia('(min-width: 1200px)').matches;
+    const showScratch = scratchVisibleForView();
+    const padKey = scratchPadKey();
     root.className = 'app-root';
+    if (showScratch && wideScratch) {
+      root.classList.add('scratch-wide');
+    }
 
     const header = el('header', { className: 'app-header' });
     header.appendChild(el('span', { className: 'brand', text: 'KG Course' }));
@@ -1091,12 +1143,30 @@
       saveState();
       render();
     });
+    const scratchBtn = el('button', {
+      type: 'button',
+      className: 'btn-theme btn-scratch',
+      text: 'Scratchpad',
+      'aria-pressed': state.scratchOpen ? 'true' : 'false',
+    });
+    scratchBtn.addEventListener('click', () => {
+      state.scratchOpen = !state.scratchOpen;
+      saveState();
+      render();
+    });
+    header.appendChild(scratchBtn);
     header.appendChild(themeBtn);
     root.appendChild(header);
 
-    const shell = el('div', { className: 'app-shell' });
+    const shellClass =
+      'app-shell' + (showScratch && wideScratch ? ' scratch-open' : '');
+    const shell = el('div', { className: shellClass });
     renderRail(shell);
     const panel = el('main', { className: 'panel' });
+
+    if (showScratch && !wideScratch) {
+      mountScratchBlock(panel, padKey);
+    }
 
     if (view.kind === 'overview') renderOverview(panel);
     else if (view.kind === 'module') {
@@ -1107,6 +1177,9 @@
     else if (view.kind === 'drill') renderDrill(panel);
 
     shell.appendChild(panel);
+    if (showScratch && wideScratch) {
+      mountScratchColumn(shell, padKey);
+    }
     root.appendChild(shell);
   }
 

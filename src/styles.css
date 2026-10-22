@@ -798,3 +798,196 @@ body {
   opacity: 0;
   overflow: hidden;
 }
+
+.btn-scratch[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+@media (min-width: 1200px) {
+  .app-root.scratch-wide {
+    max-width: 1680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-shell.scratch-open {
+    grid-template-columns: 260px 1fr 420px;
+  }
+
+  .app-shell.scratch-open .panel {
+    max-width: none;
+  }
+}
+
+.scratch-column {
+  display: none;
+  background: var(--bg-rail);
+  border-left: 1px solid var(--border);
+}
+
+@media (min-width: 1200px) {
+  .scratch-column {
+    display: block;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    width: 420px;
+    max-width: 420px;
+  }
+
+  .scratch-column-inner {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 3.75rem);
+    overflow: auto;
+    padding: 1rem 0.85rem 1.25rem;
+  }
+
+  .scratch-in-panel,
+  .scratch-block {
+    display: none;
+  }
+}
+
+.scratch-block {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+@media (max-width: 1199px) {
+  .scratch-column {
+    display: none !important;
+  }
+}
+
+.scratch-heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.scratch-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 14rem;
+}
+
+.scratch-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scratch-tool-btn {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: inherit;
+}
+
+.scratch-tool-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.scratch-tool-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.scratch-swatches {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: 0.15rem;
+}
+
+.scratch-swatch {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  padding: 0;
+  cursor: pointer;
+}
+
+.scratch-swatch-ink {
+  background: var(--text);
+}
+
+.scratch-swatch-accent {
+  background: var(--accent);
+}
+
+.scratch-swatch-muted {
+  background: var(--text-muted);
+}
+
+.scratch-swatch[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.scratch-persist-note {
+  flex: 1 1 100%;
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  color: var(--wrong);
+}
+
+.scratch-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 12rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.scratch-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.scratch-column-inner .scratch-widget {
+  flex: 1;
+  min-height: 0;
+}
+
+.scratch-column-inner .scratch-canvas-wrap {
+  flex: 1;
+  min-height: 10rem;
+}
+
+.scratch-inline-input {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+}
+
+.scratch-inline-input input {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  min-width: 5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
