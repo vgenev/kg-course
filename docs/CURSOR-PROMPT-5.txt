@@ -1,0 +1,15 @@
+Round 3 fix. Two things still fail. Measured on the current dist/knowledge-graphs-course.html, tab brought to front, deviceScaleFactor 1.
+
+WHAT WORKS (do not regress): at 1440x900 the pad is 390x340, pen strokes persist as normalized vectors under kg-course-scratch-v1, node and edge tools create labelled elements, undo works, Save PNG emits a 52 KB png, per-part keys are correct (overview, m2), strokes replay after reload.
+
+FAIL 1, narrow layout (viewport 900x800, scratchpad open):
+- `aside.scratch-column` has `display:none` and `grid-template-columns` is `260px 640px`.
+- There is NO inline pad in the panel at all. Panel children are: H1, P.goal, H2, UL, DIV.stats-row, P.course-source.
+- The only canvas in the DOM is the hidden one inside the aside, measuring 0x0.
+Required: below 1200px the pad must be MOUNTED inside `.panel` as the first child, before the module H1, as `.scratch-block`, and that is the canvas the user draws on. One canvas in the DOM at a time (destroy or unmount the column instance when the inline one mounts, otherwise you keep a 0x0 phantom and duplicate listeners). Required outcome: at 900x800 `document.querySelectorAll('canvas').length === 1`, its size is at least 300x300, and `canvas.compareDocumentPosition(panel h1)` reports the H1 as FOLLOWING.
+
+FAIL 2, sizing when the tab is throttled or the pad mounts while hidden:
+- rAF does not fire in a background tab, so `resize()` never runs and the canvas sits at the browser default 300x150 with no inline style until something forces a frame.
+Required: call `resize()` synchronously once immediately after the canvas is in the document (before scheduling the rAF), and keep the rAF + ResizeObserver path for later changes. Required outcome: load the page in a background tab, wait 2s, then focus the tab: the canvas must already be correct at first paint, without a resize event.
+
+Run both checks yourself and report the measured numbers per case: canvas count, canvas size, DOM order result, and the canvas size after a background-tab load. Then rebuild dist and index.html (byte-identical) and run npm test.
