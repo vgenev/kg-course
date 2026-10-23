@@ -1751,3 +1751,44 @@ body.scratch-lock { overflow: hidden; }
   z-index: 91;
   pointer-events: none;
 }
+
+
+/* Bigger icons: 20px glyphs in 36x32 targets. Sized so the nine tools plus
+   three swatches still fit one row in the 470px pad column (429 of 434px). */
+.scratch-toolbar {
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+
+.scratch-tool-btn {
+  width: 36px;
+  height: 32px;
+}
+
+.scratch-tool-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.scratch-toolbar .scratch-swatch {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  max-width: 20px;
+  flex: 0 0 20px;
+}
+
+
+/* The glyph was shrinking inside the flex button (13x20 instead of square). */
+.scratch-tool-btn svg {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  max-width: none;
+}
+
+/* 34px targets: nine tools + the swatch group still fit one row at 470px. */
+.scratch-tool-btn {
+  width: 34px;
+  height: 32px;
+}
