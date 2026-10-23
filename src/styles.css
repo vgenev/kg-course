@@ -1527,3 +1527,83 @@ pre,
 .instructions-panel h2 {
   font-family: var(--hand);
 }
+
+
+/* ------------------------------------------------------------
+   Scratchpad: multi-line notes + full-screen drawing
+   ------------------------------------------------------------ */
+
+canvas { touch-action: none; }   /* a finger draws instead of scrolling */
+
+.scratch-inline-input.is-multiline {
+  min-width: min(24rem, 70vw);
+}
+
+.scratch-inline-input.is-multiline textarea {
+  width: 100%;
+  min-height: 4.2rem;
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  padding: 0.45rem 0.55rem;
+  border: 2px solid var(--accent);
+  border-radius: 2px 6px 3px 8px / 5px 2px 8px 3px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  resize: both;
+  white-space: pre;
+  overflow: auto;
+}
+
+.scratch-widget.scratch-full {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  margin: 0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--bg);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+}
+
+.scratch-full .scratch-toolbar {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+.scratch-full .scratch-canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+.scratch-full .scratch-hint,
+.scratch-full .scratch-persist-note {
+  flex: 0 0 auto;
+}
+
+body.scratch-lock { overflow: hidden; }
+
+.scratch-fs-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  box-shadow: 2px 3px 0 var(--paper-shadow), inset 0 -3px 0 var(--accent);
+}
+
+
+/* The canvas is taken out of flow inside its wrapper. Otherwise its inline
+   height props the wrapper open, and exiting full screen leaves the pad stuck
+   at window height. Absolute positioning keeps the wrapper's size authoritative. */
+.scratch-canvas-wrap {
+  position: relative;
+}
+
+.scratch-canvas-wrap canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}

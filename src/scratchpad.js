@@ -98,6 +98,27 @@
     return px + 'px ' + handStack();
   }
 
+  function monoStack() {
+    const s = getComputedStyle(document.documentElement);
+    return s.getPropertyValue('--mono').trim() || 'monospace';
+  }
+
+  /* One line of text is a handwritten note; several lines are pasted data
+     (a table of entities, a triple list) and must keep its columns aligned. */
+  function isDataText(label) {
+    return /\n/.test(label || '') || /\S {2,}\S/.test(label || '');
+  }
+
+  function textFontFor(label, size) {
+    return isDataText(label)
+      ? size - 1 + 'px ' + monoStack()
+      : padFont(size);
+  }
+
+  function textLineHeight(label) {
+    return isDataText(label) ? 18 : 20;
+  }
+
   function shadowColor() {
     const s = getComputedStyle(document.documentElement);
     return s.getPropertyValue('--paper-shadow').trim() || 'rgba(65,64,62,0.28)';
@@ -356,6 +377,41 @@
     saveBtn.addEventListener('click', () => savePng(padKey));
     toolbar.appendChild(saveBtn);
 
+    // Draw on the whole screen: the pad becomes a fixed overlay over the page.
+    // Handy with a stylus or a finger on a tablet, where a 430px panel is tiny.
+    const fsBtn = document.createElement('button');
+    fsBtn.type = 'button';
+    fsBtn.className = 'scratch-tool-btn scratch-fs-btn';
+    fsBtn.textContent = 'Full screen';
+    fsBtn.setAttribute('aria-pressed', 'false');
+    fsBtn.addEventListener('click', () => toggleFullscreen());
+    toolbar.appendChild(fsBtn);
+
+    function isFullscreen() {
+      return wrap.classList.contains('scratch-full');
+    }
+
+    function toggleFullscreen(force) {
+      const next = typeof force === 'boolean' ? force : !isFullscreen();
+      wrap.classList.toggle('scratch-full', next);
+      document.body.classList.toggle('scratch-lock', next);
+      fsBtn.textContent = next ? 'Exit (Esc)' : 'Full screen';
+      fsBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      // Layout changes synchronously, so measure after the class lands.
+      requestAnimationFrame(() => {
+        resize();
+        redraw();
+      });
+    }
+
+    function onFsKey(ev) {
+      if (ev.key === 'Escape' && isFullscreen()) {
+        ev.preventDefault();
+        toggleFullscreen(false);
+      }
+    }
+    document.addEventListener('keydown', onFsKey);
+
     toolbar.appendChild(persistNote);
 
     const canvasWrap = document.createElement('div');
@@ -533,32 +589,36 @@
 
     function drawTextAnn(ctx2, t, theme) {
       const p = px(t.x, t.y);
-      ctx2.font =
-        padFont(15);
+      const label = t.label || '';
+      const lines = label.split('\n');
+      const lh = textLineHeight(label);
+      ctx2.font = textFontFor(label, 15);
       ctx2.fillStyle = theme.ink;
-      ctx2.textAlign = 'center';
-      ctx2.textBaseline = 'middle';
-      ctx2.fillText(t.label || '', p.x, p.y);
+      ctx2.textAlign = 'left';
+      ctx2.textBaseline = 'top';
+      lines.forEach((ln, i) => ctx2.fillText(ln, p.x, p.y + i * lh));
     }
 
     function textBoundsPx(t, ctx2) {
       const p = px(t.x, t.y);
-      ctx2.font =
-        padFont(15);
-      const tw = ctx2.measureText(t.label || '').width;
+      const label = t.label || '';
+      const lines = label.split('\n');
+      const lh = textLineHeight(label);
+      ctx2.font = textFontFor(label, 15);
+      const tw = Math.max.apply(
+        null,
+        lines.map((ln) => ctx2.measureText(ln).width)
+      );
       const pad = 4;
       return {
-        left: p.x - tw / 2 - pad,
-        right: p.x + tw / 2 + pad,
-        top: p.y - 8,
-        bottom: p.y + 8,
+        left: p.x - pad,
+        right: p.x + tw + pad,
+        top: p.y - pad,
+        bottom: p.y + (lines.length - 1) * lh + lh - 2,
       };
     }
 
     function textAtNorm(nx, ny) {
-      const f =
-        padFont(15);
-      ctx.font = f;
       for (let i = data.texts.length - 1; i >= 0; i--) {
         const t = data.texts[i];
         const b = textBoundsPx(t, ctx);
@@ -759,35 +819,63 @@
       inlineInput = null;
     }
 
-    function showInlineInput(clientX, clientY, initial, onCommit, onCancel) {
+    function showInlineInput(clientX, clientY, initial, onCommit, onCancel, opts) {
+      opts = opts || {};
       removeInlineInput();
       const box = document.createElement('div');
-      box.className = 'scratch-inline-input';
+      box.className = 'scratch-inline-input' + (opts.multiline ? ' is-multiline' : '');
       const r = canvasWrap.getBoundingClientRect();
       box.style.left = clientX - r.left + 'px';
       box.style.top = clientY - r.top + 'px';
-      const inp = document.createElement('input');
-      inp.type = 'text';
+      const inp = document.createElement(opts.multiline ? 'textarea' : 'input');
+      if (!opts.multiline) inp.type = 'text';
       inp.value = initial || '';
-      inp.setAttribute('aria-label', 'Label');
+      inp.setAttribute('aria-label', opts.multiline ? 'Text note' : 'Label');
+      if (opts.multiline) {
+        inp.rows = 3;
+        inp.spellcheck = false;
+        inp.placeholder = 'paste or type, Enter for a new line, Cmd+Enter to place';
+        const grow = () => {
+          inp.rows = Math.min(14, Math.max(3, inp.value.split('\n').length + 1));
+        };
+        inp.addEventListener('input', grow);
+        grow();
+      }
       box.appendChild(inp);
       canvasWrap.appendChild(box);
       inlineInput = box;
       inp.focus();
+      try {
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+      } catch (_) {}
+
+      function clean(raw) {
+        // Keep leading spaces and inner alignment: a pasted table loses its
+        // columns if the value is trimmed like a one-word node label.
+        const lines = raw.replace(/\r\n?/g, '\n').split('\n').map((l) => l.replace(/\s+$/, ''));
+        while (lines.length && !lines[lines.length - 1]) lines.pop();
+        while (lines.length && !lines[0]) lines.shift();
+        return lines.join('\n');
+      }
+
       function commit() {
-        const v = inp.value.trim();
+        const v = clean(inp.value);
         removeInlineInput();
-        if (v) onCommit(v);
+        if (v.trim()) onCommit(v);
         else if (onCancel) onCancel();
       }
+
       inp.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter') {
-          ev.preventDefault();
-          commit();
-        } else if (ev.key === 'Escape') {
+        const cmdEnter = ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey);
+        if (ev.key === 'Escape') {
           ev.preventDefault();
           removeInlineInput();
           if (onCancel) onCancel();
+          return;
+        }
+        if (cmdEnter || (ev.key === 'Enter' && !opts.multiline)) {
+          ev.preventDefault();
+          commit();
         }
       });
       inp.addEventListener('blur', () => {
@@ -864,7 +952,8 @@
               persist();
               redraw();
             },
-            () => redraw()
+            () => redraw(),
+            { multiline: true }
           );
         }, 0);
       } else if (tool === 'eraser') {
@@ -1165,11 +1254,14 @@
 
     function drawText2(t) {
       const p = px2(t.x, t.y);
-      ctx.font = padFont(15);
+      const label = t.label || '';
+      const lines = label.split('\n');
+      const lh = textLineHeight(label);
+      ctx.font = textFontFor(label, 15);
       ctx.fillStyle = theme.ink;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(t.label || '', p.x, p.y);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      lines.forEach((ln, i) => ctx.fillText(ln, p.x, p.y + i * lh));
     }
 
     for (const s of data.strokes) drawStroke2(s);
