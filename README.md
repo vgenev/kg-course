@@ -13,8 +13,14 @@ Body text is a print serif, headings and controls are a handwriting stack, data 
 monospace. Two themes: `paper` (default) and `night`, sharing the same border language.
 
 `papercss` ships an `@import` of Google Fonts, which `build.mjs` strips so the artifact still
-renders with zero network access. The handwritten look comes from locally available fonts
-(Bradley Hand, Chalkboard, Marker Felt, Segoe Print) with a cursive fallback.
+renders with zero network access. The two faces that carry the look — **Neucha** and **Patrick
+Hand SC** — are committed under `assets/fonts/` (latin subset, woff2, ~26 KB total, SIL Open
+Font License 1.1) and embedded as base64 data URIs at build time, so the handwriting renders
+identically on a machine with no such fonts installed.
+
+The scratchpad draws in the same language: nodes are paper cards with a 2px ink border and an
+offset shadow, edges are a blue-pen wavered line with a filled head, labels use the hand face,
+and the canvas is larger than the reading column suggests (470px column, 420px minimum height).
 
 ## Open it
 

@@ -21,8 +21,9 @@
   --paper-shadow: rgba(65, 64, 62, 0.28);
   --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
     Georgia, 'Times New Roman', serif;
-  --hand: 'Bradley Hand', 'Chalkboard SE', 'Marker Felt', 'Segoe Print',
-    'Comic Sans MS', 'Noteworthy', cursive;
+  --hand: 'Neucha', 'Bradley Hand', 'Chalkboard SE', 'Marker Felt',
+    'Segoe Print', 'Comic Sans MS', cursive;
+  --hand-sc: 'Patrick Hand SC', 'Neucha', 'Bradley Hand', cursive;
   --mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
@@ -825,7 +826,7 @@ body {
   }
 
   .app-shell.scratch-open {
-    grid-template-columns: 260px 1fr 420px;
+    grid-template-columns: 286px minmax(0, 1fr) 470px;
   }
 
   .app-shell.scratch-open .panel {
@@ -846,8 +847,8 @@ body {
     position: sticky;
     top: 0;
     align-self: stretch;
-    width: 420px;
-    max-width: 420px;
+    width: 470px;
+    max-width: 470px;
     height: calc(100dvh - 3.75rem);
     min-height: 0;
   }
@@ -965,7 +966,7 @@ body {
 .scratch-canvas-wrap {
   position: relative;
   flex: 1 1 auto;
-  min-height: 342px;
+  min-height: 420px;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
@@ -997,7 +998,7 @@ body {
 
 .scratch-column-inner .scratch-canvas-wrap {
   flex: 1 1 auto;
-  min-height: 342px;
+  min-height: 420px;
 }
 
 .scratch-inline-input {
@@ -1203,7 +1204,8 @@ input:focus,
 .meter-seg.on { background: var(--accent); }
 
 .phase-heading, .rail-phase-label {
-  font-family: var(--hand);
+  font-family: var(--hand-sc);
+  letter-spacing: 0.06em;
   border-bottom: 2px solid var(--border);
 }
 

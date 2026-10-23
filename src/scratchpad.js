@@ -88,6 +88,78 @@
     };
   }
 
+  function handStack() {
+    const s = getComputedStyle(document.documentElement);
+    const hand = s.getPropertyValue('--hand').trim();
+    return hand || 'cursive';
+  }
+
+  function padFont(px) {
+    return px + 'px ' + handStack();
+  }
+
+  function shadowColor() {
+    const s = getComputedStyle(document.documentElement);
+    return s.getPropertyValue('--paper-shadow').trim() || 'rgba(65,64,62,0.28)';
+  }
+
+  /* A node is a paper card: offset shadow, panel fill, 2px ink border.
+     Corner radii vary slightly per node so a row of them reads hand-cut
+     rather than machine-rounded. */
+  function nodeCard(ctx2, x, y, w, h, colors, seed) {
+    const r = 5 + ((seed || 0) % 3);
+    ctx2.save();
+    ctx2.fillStyle = shadowColor();
+    roundRectPath(ctx2, x + 2, y + 3, w, h, r + 1);
+    ctx2.fill();
+    ctx2.fillStyle = colors.panel;
+    roundRectPath(ctx2, x, y, w, h, r);
+    ctx2.fill();
+    ctx2.strokeStyle = colors.ink;
+    ctx2.lineWidth = 2;
+    roundRectPath(ctx2, x, y, w, h, r);
+    ctx2.stroke();
+    ctx2.restore();
+  }
+
+  function roundRectPath(ctx2, x, y, w, h, r) {
+    ctx2.beginPath();
+    ctx2.moveTo(x + r, y);
+    ctx2.lineTo(x + w - r, y);
+    ctx2.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx2.lineTo(x + w, y + h - r);
+    ctx2.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx2.lineTo(x + r, y + h);
+    ctx2.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx2.lineTo(x, y + r);
+    ctx2.quadraticCurveTo(x, y, x + r, y);
+    ctx2.closePath();
+  }
+
+  /* Edges are drawn with a blue-pen waver: a shallow sine offset along the
+     shaft, so a straight edge looks hand-ruled instead of vector-perfect. */
+  function penLine(ctx2, x1, y1, x2, y2, color, width) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len;
+    const nx = -uy, ny = ux;
+    const steps = Math.max(2, Math.min(24, Math.round(len / 14)));
+    const amp = Math.min(1.4, len / 90);
+    ctx2.strokeStyle = color;
+    ctx2.lineWidth = width;
+    ctx2.lineCap = 'round';
+    ctx2.lineJoin = 'round';
+    ctx2.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const wobble = Math.sin(t * Math.PI * 2.2) * amp;
+      const x = x1 + dx * t + nx * wobble;
+      const y = y1 + dy * t + ny * wobble;
+      if (i === 0) ctx2.moveTo(x, y); else ctx2.lineTo(x, y);
+    }
+    ctx2.stroke();
+  }
+
   function colorForToken(colors, token) {
     if (token === 'accent') return colors.accent;
     if (token === 'muted') return colors.muted;
@@ -327,10 +399,10 @@
     }
 
     function measureNode(ctx2, label) {
-      ctx2.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx2.font = padFont(15);
       const tw = ctx2.measureText(label).width;
-      const w = Math.max(tw + 16, 40);
-      const h = 24;
+      const w = Math.max(tw + 22, 46);
+      const h = 30;
       return { w, h };
     }
 
@@ -339,16 +411,13 @@
       const { w, h } = measureNode(ctx2, n.label || '');
       const x = p.x - w / 2;
       const y = p.y - h / 2;
-      ctx2.fillStyle = theme.panel;
-      ctx2.strokeStyle = theme.border;
-      ctx2.lineWidth = 1;
-      roundRect(ctx2, x, y, w, h, 6);
-      ctx2.fill();
-      ctx2.stroke();
+      const seed = (n.id || '').replace(/\D/g, '') | 0;
+      nodeCard(ctx2, x, y, w, h, theme, seed);
+      ctx2.font = padFont(15);
       ctx2.fillStyle = theme.ink;
       ctx2.textAlign = 'center';
       ctx2.textBaseline = 'middle';
-      ctx2.fillText(n.label || '', p.x, p.y);
+      ctx2.fillText(n.label || '', p.x, p.y + 1);
     }
 
     function roundRect(ctx2, x, y, w, h, r) {
@@ -428,23 +497,17 @@
       const to = data.nodes.find((n) => n.id === e.to);
       if (!from || !to) return;
       const g = computeEdgeGeom(from, to, ctx2);
-      ctx2.strokeStyle = theme.ink;
-      ctx2.lineWidth = 1.5;
-      ctx2.beginPath();
-      ctx2.moveTo(g.x1, g.y1);
-      ctx2.lineTo(g.x2, g.y2);
-      ctx2.stroke();
+      penLine(ctx2, g.x1, g.y1, g.x2, g.y2, theme.accent, 1.8);
       if (e.label) {
         const mx = (g.a.x + g.b.x) / 2;
         const my = (g.a.y + g.b.y) / 2;
         const off = 12;
         const lx = mx + (-g.uy) * off;
         const ly = my + g.ux * off;
-        ctx2.font =
-          '11px ' + getComputedStyle(document.documentElement).fontFamily;
+        ctx2.font = padFont(14);
         ctx2.textAlign = 'center';
         ctx2.textBaseline = 'middle';
-        ctx2.fillStyle = theme.ink;
+        ctx2.fillStyle = theme.accent;
         ctx2.fillText(e.label, lx, ly);
       }
     }
@@ -456,10 +519,10 @@
       const g = computeEdgeGeom(from, to, ctx2);
       const { tipX, tipY, ux, uy } = g;
       const headLen = 9;
-      const halfW = 4;
+      const halfW = 4.5;
       const bx = tipX - ux * headLen;
       const by = tipY - uy * headLen;
-      ctx2.fillStyle = theme.ink;
+      ctx2.fillStyle = theme.accent;
       ctx2.beginPath();
       ctx2.moveTo(tipX, tipY);
       ctx2.lineTo(bx + (-uy) * halfW, by + ux * halfW);
@@ -471,7 +534,7 @@
     function drawTextAnn(ctx2, t, theme) {
       const p = px(t.x, t.y);
       ctx2.font =
-        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+        padFont(15);
       ctx2.fillStyle = theme.ink;
       ctx2.textAlign = 'center';
       ctx2.textBaseline = 'middle';
@@ -481,7 +544,7 @@
     function textBoundsPx(t, ctx2) {
       const p = px(t.x, t.y);
       ctx2.font =
-        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+        padFont(15);
       const tw = ctx2.measureText(t.label || '').width;
       const pad = 4;
       return {
@@ -494,7 +557,7 @@
 
     function textAtNorm(nx, ny) {
       const f =
-        '12px ' + getComputedStyle(document.documentElement).fontFamily;
+        padFont(15);
       ctx.font = f;
       for (let i = data.texts.length - 1; i >= 0; i--) {
         const t = data.texts[i];
@@ -978,22 +1041,19 @@
 
     function drawNode2(n) {
       const p = px2(n.x, n.y);
-      ctx.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx.font = padFont(15);
       const tw = ctx.measureText(n.label || '').width;
-      const bw = Math.max(tw + 16, 40);
-      const bh = 24;
+      const bw = Math.max(tw + 22, 46);
+      const bh = 30;
       const x = p.x - bw / 2;
       const y = p.y - bh / 2;
-      ctx.fillStyle = theme.panel;
-      ctx.strokeStyle = theme.border;
-      ctx.lineWidth = 1;
-      roundRect(ctx, x, y, bw, bh, 6);
-      ctx.fill();
-      ctx.stroke();
+      const seed = (n.id || '').replace(/\D/g, '') | 0;
+      nodeCard(ctx, x, y, bw, bh, theme, seed);
+      ctx.font = padFont(15);
       ctx.fillStyle = theme.ink;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(n.label || '', p.x, p.y);
+      ctx.fillText(n.label || '', p.x, p.y + 1);
     }
 
     function roundRect(ctx2, x, y, bw, bh, r) {
@@ -1012,10 +1072,10 @@
 
     function nodeRectPx2(n) {
       const p = px2(n.x, n.y);
-      ctx.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx.font = padFont(15);
       const tw = ctx.measureText(n.label || '').width;
-      const bw = Math.max(tw + 16, 40);
-      const bh = 24;
+      const bw = Math.max(tw + 22, 46);
+      const bh = 30;
       return {
         cx: p.x,
         cy: p.y,
@@ -1072,20 +1132,15 @@
       const to = data.nodes.find((n) => n.id === e.to);
       if (!from || !to) return;
       const g = computeEdgeGeom2(from, to);
-      ctx.strokeStyle = theme.ink;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(g.x1, g.y1);
-      ctx.lineTo(g.x2, g.y2);
-      ctx.stroke();
+      penLine(ctx, g.x1, g.y1, g.x2, g.y2, theme.accent, 1.8);
       if (e.label) {
         const mx = (g.a.x + g.b.x) / 2;
         const my = (g.a.y + g.b.y) / 2;
         const offN = 12;
-        ctx.font = '11px ' + getComputedStyle(document.documentElement).fontFamily;
+        ctx.font = padFont(14);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = theme.ink;
+        ctx.fillStyle = theme.accent;
         ctx.fillText(e.label, mx + (-g.uy) * offN, my + g.ux * offN);
       }
     }
@@ -1096,10 +1151,10 @@
       if (!from || !to) return;
       const g = computeEdgeGeom2(from, to);
       const headLen = 9;
-      const halfW = 4;
+      const halfW = 4.5;
       const bx = g.tipX - g.ux * headLen;
       const by = g.tipY - g.uy * headLen;
-      ctx.fillStyle = theme.ink;
+      ctx.fillStyle = theme.accent;
       ctx.beginPath();
       ctx.moveTo(g.tipX, g.tipY);
       ctx.lineTo(bx + (-g.uy) * halfW, by + g.ux * halfW);
@@ -1110,7 +1165,7 @@
 
     function drawText2(t) {
       const p = px2(t.x, t.y);
-      ctx.font = '12px ' + getComputedStyle(document.documentElement).fontFamily;
+      ctx.font = padFont(15);
       ctx.fillStyle = theme.ink;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

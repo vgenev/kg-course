@@ -1,0 +1,8 @@
+Neucha — Copyright (c) Jovanny Lemonad. SIL Open Font License 1.1.
+Patrick Hand SC — Copyright (c) Patrick Watters. SIL Open Font License 1.1.
+
+Both files were downloaded from Google Fonts (latin subset, woff2) and are
+embedded as base64 data URIs at build time so the course renders identically
+with no network access. OFL 1.1 permits embedding and redistribution.
+
+License text: https://openfontlicense.org/open-font-license-official-text/

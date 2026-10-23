@@ -18,6 +18,21 @@ if (/@import\s+url\(\s*["']?https?:/i.test(paper)) {
   throw new Error('papercss still contains a remote @import after stripping');
 }
 
+// Handwriting faces are embedded, not linked: the artifact must render the same
+// on a Linux box with no browser handwriting fonts installed. Both are OFL 1.1.
+const fontFiles = [
+  ['Neucha', 'neucha.woff2'],
+  ['Patrick Hand SC', 'patrick-hand-sc.woff2'],
+];
+const fonts = fontFiles
+  .map(([family, file]) => {
+    const b64 = fs
+      .readFileSync(path.join(root, 'assets', 'fonts', file))
+      .toString('base64');
+    return `@font-face{font-family:'${family}';src:url(data:font/woff2;base64,${b64}) format('woff2');font-weight:400;font-style:normal;font-display:block;}`;
+  })
+  .join('\n');
+
 const styles = fs.readFileSync(path.join(src, 'styles.css'), 'utf8');
 const grader = fs.readFileSync(path.join(src, 'grader.js'), 'utf8');
 const scratchpad = fs.readFileSync(path.join(src, 'scratchpad.js'), 'utf8');
@@ -27,6 +42,7 @@ const data = fs.readFileSync(path.join(src, 'data.json'), 'utf8');
 // Replacer functions, not strings: any "$&" inside CSS or content would otherwise
 // be interpreted as a replacement pattern and silently corrupt the build.
 const html = template
+  .replace('__FONTS__', () => fonts)
   .replace('__PAPER__', () => paper)
   .replace('__STYLES__', () => styles)
   .replace('__GRADER__', () => grader)
