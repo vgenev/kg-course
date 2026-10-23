@@ -5,6 +5,17 @@ An offline, single-file course app. Content follows the daVault curriculum
 44 graded items covering manual extraction, Extract → Resolve → Assemble → Query, and
 agentic graph design.
 
+## Look
+
+The interface uses **papercss** (inlined at build time) as its material language: 2px ink
+borders, hard offset shadows, irregular corner radii, ruled inputs, a dot-grid paper surface.
+Body text is a print serif, headings and controls are a handwriting stack, data stays
+monospace. Two themes: `paper` (default) and `night`, sharing the same border language.
+
+`papercss` ships an `@import` of Google Fonts, which `build.mjs` strips so the artifact still
+renders with zero network access. The handwritten look comes from locally available fonts
+(Bradley Hand, Chalkboard, Marker Felt, Segoe Print) with a cursive fallback.
+
 ## Open it
 
 `dist/knowledge-graphs-course.html` opens by double-click. No network, no install.

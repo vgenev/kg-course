@@ -6,5 +6,8 @@
   "scripts": {
     "test": "node --test test/*.test.cjs",
     "build": "node build.mjs"
+  },
+  "dependencies": {
+    "papercss": "^1.9.2"
   }
 }

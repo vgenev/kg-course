@@ -1,37 +1,49 @@
-:root {
-  --bg: #14171c;
-  --bg-elevated: #1c2129;
-  --bg-rail: #181c23;
-  --border: #2a313c;
-  --text: #d8dee8;
-  --text-muted: #8b95a5;
-  --accent: #e8743f;
-  --accent-hover: #f08a5c;
-  --correct: #4fbf7f;
-  --wrong: #e0685f;
-  --panel: #1a1f27;
-  --sample-bg: #151a22;
-  --instructions-bg: #1e2430;
-  --focus-ring: rgba(232, 116, 63, 0.45);
-  --font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+/* Paper palette. Default surface is warm paper with ink borders, a blue-pen
+   accent, and pencil-red for errors. Night is the same ink language inverted
+   (chalk on a dark board), not a different design. */
+:root,
+:root[data-theme='paper'],
+:root[data-theme='light'] {
+  --bg: #f6f2e9;
+  --bg-elevated: #fffdf6;
+  --bg-rail: #f1ebdf;
+  --border: #41403e;
+  --text: #1f1e1c;
+  --text-muted: #6b6a66;
+  --accent: #0b74d5;
+  --accent-hover: #085aa5;
+  --correct: #4a7130;
+  --wrong: #a7342d;
+  --panel: #fffdf6;
+  --sample-bg: #f2ecdb;
+  --instructions-bg: #eef3e4;
+  --focus-ring: rgba(11, 116, 213, 0.3);
+  --paper-shadow: rgba(65, 64, 62, 0.28);
+  --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+    Georgia, 'Times New Roman', serif;
+  --hand: 'Bradley Hand', 'Chalkboard SE', 'Marker Felt', 'Segoe Print',
+    'Comic Sans MS', 'Noteworthy', cursive;
   --mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
-:root[data-theme='light'] {
-  --bg: #eef1f5;
-  --bg-elevated: #ffffff;
-  --bg-rail: #e4e8ee;
-  --border: #c5ccd6;
-  --text: #1e2630;
-  --text-muted: #5c6778;
-  --accent: #c2491b;
-  --accent-hover: #a33d16;
-  --correct: #3a9d66;
-  --wrong: #c4564f;
-  --panel: #ffffff;
-  --sample-bg: #f4f6f9;
-  --instructions-bg: #e8ecf2;
-  --focus-ring: rgba(194, 73, 27, 0.35);
+:root[data-theme='dark'] {
+  --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+    Georgia, 'Times New Roman', serif;
+  --bg: #1b1a18;
+  --bg-elevated: #232220;
+  --bg-rail: #201f1c;
+  --border: #c9c1b0;
+  --text: #eae4d6;
+  --text-muted: #a49c8b;
+  --accent: #7fb2f0;
+  --accent-hover: #a6cbf7;
+  --correct: #8fbf6e;
+  --wrong: #e8837a;
+  --panel: #232220;
+  --sample-bg: #262420;
+  --instructions-bg: #2a2b22;
+  --focus-ring: rgba(127, 178, 240, 0.35);
+  --paper-shadow: rgba(0, 0, 0, 0.45);
 }
 
 *,
@@ -1004,4 +1016,393 @@ body {
   color: var(--text);
   min-width: 5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ============================================================
+   Paper finish, laid over papercss
+   ------------------------------------------------------------
+   papercss supplies the material language: 2px ink borders, hard
+   offset shadows, irregular corner radii, generous whitespace.
+   These rules point that language at our own tokens so both
+   themes stay consistent and nothing hardcodes a papercss colour.
+   ============================================================ */
+
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 18%, rgba(65, 64, 62, 0.035) 0 1px, transparent 1px),
+    radial-gradient(circle at 78% 62%, rgba(65, 64, 62, 0.03) 0 1px, transparent 1px);
+  background-size: 26px 26px, 31px 31px;
+  color: var(--text);
+}
+
+h1, h2, h3, h4,
+.brand-title,
+.phase-heading,
+.scratch-heading,
+.instructions-panel h2,
+.verdict-bar,
+.completion-strip {
+  font-family: var(--hand);
+  letter-spacing: 0.01em;
+}
+
+h1 { line-height: 1.15; }
+
+/* Paper surface: one rule for every raised block, so borders and
+   shadows never drift between components. */
+.module-card,
+.exercise-card,
+.instructions-panel,
+.sample-text,
+.feedback,
+.completion-strip,
+.review-row,
+.review-group .review-row,
+.log-table,
+.scratch-widget,
+.stats-row,
+.empty-state {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 3px 9px 4px 10px / 8px 3px 10px 4px;
+  box-shadow: 3px 4px 0 var(--paper-shadow);
+}
+
+.instructions-panel { background: var(--instructions-bg); }
+.sample-text { background: var(--sample-bg); }
+.sample-text, .note-callout, .code-block-wrap pre { font-family: var(--mono); }
+
+/* Buttons: physical push, no glow. */
+button,
+.btn-check,
+.btn-secondary,
+.btn-theme,
+.btn-copy,
+.btn-scratch,
+.scratch-tool-btn,
+.bucket-btn,
+.order-step,
+.option-row button {
+  font-family: var(--hand);
+  font-size: 0.98rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 2px 8px 3px 9px / 7px 2px 9px 3px;
+  box-shadow: 2px 3px 0 var(--paper-shadow);
+  transition: transform 70ms ease, box-shadow 70ms ease, background-color 120ms ease;
+}
+
+button:hover,
+.btn-check:hover,
+.btn-secondary:hover,
+.btn-theme:hover,
+.btn-copy:hover,
+.btn-scratch:hover,
+.scratch-tool-btn:hover,
+.bucket-btn:hover,
+.order-step:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 4px 0 var(--paper-shadow);
+  background: var(--bg-elevated);
+}
+
+button:active,
+.btn-check:active,
+.btn-secondary:active,
+.bucket-btn:active,
+.order-step:active {
+  transform: translate(1px, 2px);
+  box-shadow: 1px 1px 0 var(--paper-shadow);
+}
+
+button:focus-visible,
+.btn-check:focus-visible,
+.scratch-tool-btn:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+/* Selected / pressed states read as a marked-up pen line, not a fill. */
+.scratch-tool-btn[aria-pressed='true'],
+.btn-scratch[aria-pressed='true'],
+.order-step[aria-pressed='true'],
+.bucket-btn[aria-pressed='true'] {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: 2px 3px 0 var(--paper-shadow), inset 0 -3px 0 var(--accent);
+  color: var(--text);
+}
+
+/* Inputs: ruled boxes. */
+textarea,
+input[type='text'],
+input[type='number'],
+input[inputmode='decimal'],
+.num-input,
+.cloze-input,
+.triples-area,
+.scratch-inline-input {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 2px 6px 3px 7px / 5px 2px 7px 3px;
+  box-shadow: inset 1px 2px 0 rgba(65, 64, 62, 0.06);
+}
+
+textarea:focus,
+input:focus,
+.triples-area:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.triples-area, textarea { font-family: var(--mono); font-size: 0.92rem; }
+
+/* Rail reads like an index card with a highlighter on the current part. */
+.rail {
+  background: var(--bg-rail);
+  border: 2px solid var(--border);
+  border-radius: 3px 8px 4px 9px / 7px 3px 9px 4px;
+  box-shadow: 3px 4px 0 var(--paper-shadow);
+}
+
+.rail-item {
+  border: 2px solid transparent;
+  border-radius: 2px 7px 3px 8px;
+  font-family: var(--hand);
+}
+
+.rail-item:hover { border-color: var(--border); background: var(--bg-elevated); }
+
+.rail-item[aria-current='page'] {
+  border-color: var(--border);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--accent) 22%, transparent) 0 55%,
+    transparent 55%
+  );
+  box-shadow: 2px 2px 0 var(--paper-shadow);
+}
+
+.rail-num {
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+
+.meter-seg {
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 1px;
+}
+
+.meter-seg.on { background: var(--accent); }
+
+.phase-heading, .rail-phase-label {
+  font-family: var(--hand);
+  border-bottom: 2px solid var(--border);
+}
+
+/* Verdicts: pencil annotations in the margin. */
+.feedback {
+  border-left-width: 10px;
+  border-left-style: solid;
+  border-left-color: var(--border);
+}
+/* The verdict class lives on .verdict-bar inside the card, so reach it with :has()
+   rather than inventing classes the app does not emit. */
+.feedback:has(.verdict-bar.correct) { border-left-color: var(--correct); }
+.feedback:has(.verdict-bar.partial) { border-left-color: var(--accent); }
+.feedback:has(.verdict-bar.wrong) { border-left-color: var(--wrong); }
+
+.verdict-bar { letter-spacing: 0.02em; }
+
+.note-callout {
+  border-left: 4px solid var(--accent);
+  background: var(--instructions-bg);
+  border-radius: 0 6px 6px 0;
+}
+
+.log-table { border-collapse: collapse; width: 100%; }
+.log-table th, .log-table td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.6rem;
+  vertical-align: top;
+}
+.log-table thead th {
+  font-family: var(--hand);
+  background: var(--bg-rail);
+}
+
+/* Header: a sheet with a ruled edge. */
+.app-header {
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-elevated);
+  box-shadow: 0 2px 0 var(--paper-shadow);
+}
+
+.brand .brand-title, .header-title { font-family: var(--hand); }
+.kicker {
+  font-family: var(--mono);
+  letter-spacing: 0.16em;
+}
+
+/* Scratch pad sits on the page like a sheet of graph paper. */
+.scratch-canvas-wrap {
+  background-color: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 2px 8px 3px 9px / 7px 2px 9px 3px;
+  box-shadow: 3px 4px 0 var(--paper-shadow);
+}
+
+.scratch-toolbar { gap: 0.4rem; }
+.scratch-swatch {
+  border: 2px solid var(--border);
+  border-radius: 3px 6px 3px 6px;
+  box-shadow: 1px 2px 0 var(--paper-shadow);
+}
+
+/* Dark theme: the paper goes to a chalkboard, so shadows read as lift,
+   not as ink bleed. */
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px);
+}
+
+:root[data-theme='dark'] .module-card,
+:root[data-theme='dark'] .exercise-card,
+:root[data-theme='dark'] .instructions-panel,
+:root[data-theme='dark'] .sample-text,
+:root[data-theme='dark'] .feedback,
+:root[data-theme='dark'] .completion-strip,
+:root[data-theme='dark'] .review-row,
+:root[data-theme='dark'] .log-table,
+:root[data-theme='dark'] .scratch-widget,
+:root[data-theme='dark'] .stats-row,
+:root[data-theme='dark'] .empty-state,
+:root[data-theme='dark'] .rail,
+:root[data-theme='dark'] .scratch-canvas-wrap,
+:root[data-theme='dark'] button {
+  box-shadow: 2px 3px 0 var(--paper-shadow);
+}
+
+
+/* ------------------------------------------------------------
+   Paper pass 2: measured fixes
+   ------------------------------------------------------------
+   The rail overflowed its box (scrollWidth 296 vs clientWidth 218): the
+   label was a flex row, so a long part title could not wrap and the meter
+   could not shrink. Body text also reads better as print than as UI sans.
+   ------------------------------------------------------------ */
+
+.rail,
+.rail-nav { overflow-x: hidden; }
+
+.rail-item {
+  overflow: hidden;
+  padding: 0.5rem 0.6rem;
+}
+
+.rail-item-label {
+  display: block;
+  line-height: 1.32;
+}
+
+.rail-num {
+  display: inline-block;
+  min-width: 1.5em;
+  margin-right: 0.35rem;
+}
+
+.rail-item .meter {
+  /* A capped, left-aligned strip: the meter never dictates the rail width. */
+  width: 64px;
+  max-width: 64px;
+  margin-left: 0;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.rail-item .meter-seg {
+  /* Fixed marks, not flexible: flex-basis 0 inside the rail produced a
+     phantom scrollWidth and 2px slivers. */
+  flex: 0 0 6px;
+  width: 6px;
+  min-width: 6px;
+}
+
+/* Compact controls: papercss-sized padding is too roomy for a toolbar. */
+button,
+.btn-check,
+.btn-secondary,
+.btn-theme,
+.btn-copy,
+.btn-scratch,
+.scratch-tool-btn,
+.bucket-btn,
+.order-step {
+  padding: 0.34rem 0.8rem;
+  line-height: 1.25;
+}
+
+.scratch-toolbar button,
+.scratch-tool-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.92rem;
+}
+
+/* Ruled sample passages must wrap, never clip. */
+.sample-text,
+.code-block-wrap pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lesson p,
+.instructions-panel li,
+.sample-text {
+  font-size: 1.02rem;
+  line-height: 1.62;
+}
+
+.exercise-prompt {
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+
+/* Code blocks are paper surfaces too: the last 1px borders in the app. */
+pre,
+.code-block-wrap {
+  background: var(--sample-bg);
+  border: 2px solid var(--border);
+  border-radius: 2px 8px 3px 9px / 7px 2px 9px 3px;
+  box-shadow: 2px 3px 0 var(--paper-shadow);
+}
+
+.code-block-wrap pre {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+
+/* Readability pass on the rail: 14px labels in a 260px column wrapped
+   awkwardly; the extra 26px and one type step fix most of it. */
+.app-shell {
+  grid-template-columns: 286px minmax(0, 1fr);
+}
+
+.rail-item-label {
+  font-size: 0.95rem;
+}
+
+.rail-phase-note {
+  font-size: 0.74rem;
 }

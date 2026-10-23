@@ -51,7 +51,7 @@
   }
 
   function defaultState() {
-    return { v: 1, rec: {}, log: [], theme: 'dark', scratchOpen: false };
+    return { v: 1, rec: {}, log: [], theme: 'light', scratchOpen: false };
   }
 
   function loadState() {
@@ -64,7 +64,7 @@
             v: 1,
             rec: parsed.rec || {},
             log: Array.isArray(parsed.log) ? parsed.log : [],
-            theme: parsed.theme === 'light' ? 'light' : 'dark',
+            theme: parsed.theme === 'dark' ? 'dark' : 'light',
             scratchOpen: !!parsed.scratchOpen,
           };
         }
@@ -1062,7 +1062,7 @@
             v: 1,
             rec: parsed.rec || {},
             log: parsed.log || [],
-            theme: parsed.theme === 'light' ? 'light' : 'dark',
+            theme: parsed.theme === 'dark' ? 'dark' : 'light',
             scratchOpen: !!parsed.scratchOpen,
           };
           document.documentElement.setAttribute('data-theme', state.theme);

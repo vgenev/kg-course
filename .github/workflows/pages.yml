@@ -23,6 +23,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
+
+      - name: Install build dependencies
+        run: npm ci
 
       - name: Test the grading engine
         run: npm test
@@ -41,7 +45,10 @@ jobs:
 
       - name: Fail if the build leaked a network dependency
         run: |
-          if grep -qE 'https?://' _site/index.html; then
+          # Inlined data: URIs legitimately contain xmlns="http://www.w3.org/..."
+          # so strip them before looking for real remote references.
+          sed -E 's/data:[^")]+//g' _site/index.html > /tmp/chk.html
+          if grep -qE 'https?://' /tmp/chk.html; then
             echo "external URL found in the built file"; exit 1
           fi
           if grep -q '__DATA__\|__STYLES__\|__GRADER__\|__APP__' _site/index.html; then
