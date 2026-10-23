@@ -1116,6 +1116,19 @@
     root.appendChild(rail);
   }
 
+  let headerRO = null;
+  function syncHeaderHeight(header) {
+    const apply = () =>
+      document.documentElement.style.setProperty(
+        '--header-h',
+        header.offsetHeight + 'px'
+      );
+    apply();
+    if (headerRO) headerRO.disconnect();
+    headerRO = new ResizeObserver(apply);
+    headerRO.observe(header);
+  }
+
   function render() {
     if (scratchUnmount) {
       scratchUnmount();
@@ -1161,6 +1174,10 @@
     });
     header.appendChild(scratchBtn);
     root.appendChild(header);
+    // The header can wrap to two rows on narrow windows; pin its real height
+    // into --header-h so the sticky rail and the fullscreen pad offset correctly.
+    // Measured after insertion — offsetHeight is 0 on a detached node.
+    syncHeaderHeight(header);
 
     const shellClass =
       'app-shell' + (showScratch && wideScratch ? ' scratch-open' : '');

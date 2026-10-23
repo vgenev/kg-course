@@ -443,7 +443,10 @@
       fsBtn.setAttribute('aria-label', next ? 'Exit full screen' : 'Full screen');
       fsBtn.setAttribute('title', next ? 'Exit full screen (Esc)' : 'Full screen');
       fsBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
-      // Layout changes synchronously, so measure after the class lands.
+      // The class landed synchronously, so the wrap already has its new box:
+      // measure now, then once more after the frame in case a scrollbar moved.
+      resize();
+      redraw();
       requestAnimationFrame(() => {
         resize();
         redraw();

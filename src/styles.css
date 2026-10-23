@@ -1495,8 +1495,13 @@ canvas { touch-action: none; }   /* a finger draws instead of scrolling */
 
 .scratch-widget.scratch-full {
   position: fixed;
-  inset: 0;
-  z-index: 80;
+  /* Start under the sticky header instead of covering it: the pad takes the
+     rest of the viewport, the header stays readable and clickable. */
+  top: var(--header-h);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 39;
   margin: 0;
   padding: 12px;
   display: flex;
@@ -1809,4 +1814,14 @@ body.scratch-lock { overflow: hidden; }
     top: var(--header-h);
     height: calc(100dvh - var(--header-h));
   }
+}
+
+
+/* In fullscreen the pad is the whole area under the header: the drawing
+   surface has to take the leftover height, not keep its inline size. */
+.scratch-widget.scratch-full .scratch-canvas-wrap {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: auto;
 }
