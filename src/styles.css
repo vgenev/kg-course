@@ -1706,3 +1706,48 @@ body.scratch-lock { overflow: hidden; }
   padding: 0;
   border-radius: 50%;
 }
+
+
+/* ------------------------------------------------------------
+   Tooltips: above the button in the panel, below it in full screen
+   ------------------------------------------------------------
+   They were anchored below the button with no stacking context, so the
+   canvas (a positioned sibling) painted over them and only a sliver showed
+   above the sketch field. The toolbar now owns a stacking context, and the
+   default anchor is upward where the panel has room.
+   ------------------------------------------------------------ */
+
+.scratch-toolbar {
+  position: relative;
+  z-index: 6;
+}
+
+.scratch-tool-btn:hover::after,
+.scratch-tool-btn:focus-visible::after {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+/* In full screen the toolbar sits at the viewport edge: flip below. */
+.scratch-widget.scratch-full .scratch-tool-btn:hover::after,
+.scratch-widget.scratch-full .scratch-tool-btn:focus-visible::after {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
+
+/* A little pointer so the label reads as attached to its icon. */
+.scratch-tool-btn:hover::before,
+.scratch-tool-btn:focus-visible::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--bg-elevated);
+  border-right: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  z-index: 91;
+  pointer-events: none;
+}

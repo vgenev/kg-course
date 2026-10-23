@@ -286,6 +286,7 @@
     let currentStroke = null;
     let edgeDrag = null;
     let nodeDrag = null;
+    let textDrag = null;
     let inlineInput = null;
     let eraserHover = null;
 
@@ -355,6 +356,15 @@
         data.edges.pop();
       } else if (last.type === 'text') {
         data.texts = data.texts.filter((t) => t.id !== last.id);
+      } else if (last.type === 'move') {
+        const item =
+          last.kind === 'node'
+            ? data.nodes.find((n) => n.id === last.id)
+            : data.texts.find((t) => t.id === last.id);
+        if (item) {
+          item.x = last.x;
+          item.y = last.y;
+        }
       }
       savePads() || showPersistFail();
       redraw();
@@ -936,9 +946,30 @@
         redraw();
       } else if (tool === 'node') {
         const hit = nodeAt(pt.x, pt.y);
+        const hitText = hit ? null : textAtNorm(pt.x, pt.y);
         if (hit) {
           canvas.setPointerCapture(ev.pointerId);
-          nodeDrag = { id: hit.id, startX: pt.x, startY: pt.y, moved: false };
+          nodeDrag = {
+            id: hit.id,
+            startX: pt.x,
+            startY: pt.y,
+            sx: hit.x,
+            sy: hit.y,
+            moved: false,
+          };
+        } else if (hitText) {
+          canvas.setPointerCapture(ev.pointerId);
+          textDrag = {
+            kind: 'text',
+            id: hitText.id,
+            dx: hitText.x - pt.x,
+            dy: hitText.y - pt.y,
+            startX: pt.x,
+            startY: pt.y,
+            sx: hitText.x,
+            sy: hitText.y,
+            moved: false,
+          };
         } else {
           const clickX = ev.clientX;
           const clickY = ev.clientY;
@@ -967,31 +998,43 @@
           edgeDrag = { fromId: hit.id, from: hit, x: pt.x, y: pt.y };
         }
       } else if (tool === 'text') {
-        const hit = textAtNorm(pt.x, pt.y);
-        const clickX = ev.clientX;
-        const clickY = ev.clientY;
-        const nx = pt.x;
-        const ny = pt.y;
-        setTimeout(() => {
-          showInlineInput(
-            clickX,
-            clickY,
-            hit ? hit.label : '',
-            (label) => {
-              if (hit) {
-                hit.label = label;
-              } else {
+        const hitText = textAtNorm(pt.x, pt.y);
+        const hitNode = hitText ? null : nodeAt(pt.x, pt.y);
+        if (hitText || hitNode) {
+          canvas.setPointerCapture(ev.pointerId);
+          textDrag = {
+            kind: hitText ? 'text' : 'node',
+            id: (hitText || hitNode).id,
+            dx: (hitText || hitNode).x - pt.x,
+            dy: (hitText || hitNode).y - pt.y,
+            startX: pt.x,
+            startY: pt.y,
+            sx: (hitText || hitNode).x,
+            sy: (hitText || hitNode).y,
+            moved: false,
+          };
+        } else {
+          const clickX = ev.clientX;
+          const clickY = ev.clientY;
+          const nx = pt.x;
+          const ny = pt.y;
+          setTimeout(() => {
+            showInlineInput(
+              clickX,
+              clickY,
+              '',
+              (label) => {
                 const id = 't' + nextTextId++;
                 data.texts.push({ id, x: nx, y: ny, label });
                 pushHistory(padKey, { type: 'text', id });
-              }
-              persist();
-              redraw();
-            },
-            () => redraw(),
-            { multiline: true }
-          );
-        }, 0);
+                persist();
+                redraw();
+              },
+              () => redraw(),
+              { multiline: true }
+            );
+          }, 0);
+        }
       } else if (tool === 'eraser') {
         const target = hitTestEraser(pt.x, pt.y);
         if (target) {
@@ -1015,7 +1058,7 @@
           pts.push([pt.x, pt.y]);
           redraw();
         }
-      } else if (tool === 'node' && nodeDrag) {
+      } else if (nodeDrag) {
         const n = data.nodes.find((x) => x.id === nodeDrag.id);
         if (n) {
           if (
@@ -1029,6 +1072,21 @@
             redraw();
           }
         }
+      } else if (textDrag) {
+        if (Math.hypot(pt.x - textDrag.startX, pt.y - textDrag.startY) > 0.008) {
+          textDrag.moved = true;
+        }
+        if (textDrag.moved) {
+          const item =
+            textDrag.kind === 'text'
+              ? data.texts.find((t2) => t2.id === textDrag.id)
+              : data.nodes.find((n2) => n2.id === textDrag.id);
+          if (item) {
+            item.x = pt.x + textDrag.dx;
+            item.y = pt.y + textDrag.dy;
+            redraw();
+          }
+        }
       } else if (tool === 'edge' && edgeDrag) {
         edgeDrag.x = pt.x;
         edgeDrag.y = pt.y;
@@ -1036,6 +1094,9 @@
       } else if (tool === 'eraser') {
         eraserHover = hitTestEraser(pt.x, pt.y);
         redraw();
+      } else if (tool === 'node' || tool === 'text') {
+        const over = nodeAt(pt.x, pt.y) || textAtNorm(pt.x, pt.y);
+        canvas.style.cursor = over ? 'grab' : tool === 'text' ? 'text' : 'crosshair';
       }
     });
 
@@ -1053,9 +1114,75 @@
         currentStroke = null;
         drawing = false;
         redraw();
-      } else if (tool === 'node' && nodeDrag) {
-        if (nodeDrag.moved) persist();
+      } else if (nodeDrag) {
+        const d = nodeDrag;
         nodeDrag = null;
+        canvas.style.cursor = 'default';
+        if (d.moved) {
+          pushHistory(padKey, { type: 'move', kind: 'node', id: d.id, x: d.sx, y: d.sy });
+          persist();
+          redraw();
+        } else if (tool === 'node') {
+          // A press without movement is a rename, not a drag.
+          const n = data.nodes.find((x) => x.id === d.id);
+          if (n) {
+            const r = canvas.getBoundingClientRect();
+            showInlineInput(
+              r.left + n.x * r.width,
+              r.top + n.y * r.height,
+              n.label || '',
+              (label) => {
+                n.label = label;
+                persist();
+                redraw();
+              },
+              () => redraw()
+            );
+          }
+        }
+      } else if (textDrag) {
+        const d = textDrag;
+        textDrag = null;
+        canvas.style.cursor = 'default';
+        if (d.moved) {
+          pushHistory(padKey, { type: 'move', kind: d.kind, id: d.id, x: d.sx, y: d.sy });
+          persist();
+          redraw();
+        } else {
+          const item =
+            d.kind === 'text'
+              ? data.texts.find((t2) => t2.id === d.id)
+              : data.nodes.find((n2) => n2.id === d.id);
+          if (item) {
+            const r = canvas.getBoundingClientRect();
+            if (d.kind === 'text') {
+              showInlineInput(
+                r.left + item.x * r.width,
+                r.top + item.y * r.height,
+                item.label || '',
+                (label) => {
+                  item.label = label;
+                  persist();
+                  redraw();
+                },
+                () => redraw(),
+                { multiline: true }
+              );
+            } else {
+              showInlineInput(
+                r.left + item.x * r.width,
+                r.top + item.y * r.height,
+                item.label || '',
+                (label) => {
+                  item.label = label;
+                  persist();
+                  redraw();
+                },
+                () => redraw()
+              );
+            }
+          }
+        }
       } else if (tool === 'edge' && edgeDrag) {
         const pt = canvasPoint(ev.clientX, ev.clientY);
         const target = nodeAt(pt.x, pt.y);
@@ -1101,7 +1228,9 @@
       drawing = false;
       currentStroke = null;
       nodeDrag = null;
+      textDrag = null;
       edgeDrag = null;
+      canvas.style.cursor = 'default';
       redraw();
     });
 
