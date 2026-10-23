@@ -672,7 +672,28 @@
       for (const m of mods) {
         const mm = Math.round(moduleMastery(m) * 100);
         const anyAttempt = m.exercises.some((e) => recFor(e.id).attempts > 0);
+        const openModule = () => {
+          view = { kind: 'module', id: m.id };
+          render();
+        };
         const card = el('div', { className: 'module-card' });
+        // The whole card is the target, not just its Open button.
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute(
+          'aria-label',
+          'Open module ' + m.num + ': ' + m.title
+        );
+        card.addEventListener('click', (ev) => {
+          if (ev.target && ev.target.closest && ev.target.closest('button')) return;
+          openModule();
+        });
+        card.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            openModule();
+          }
+        });
         card.appendChild(
           el('div', {
             className: 'rail-num',
@@ -692,10 +713,7 @@
             type: 'button',
             className: 'btn-check btn-open',
             text: 'Open',
-            onClick: () => {
-              view = { kind: 'module', id: m.id };
-              render();
-            },
+            onClick: openModule,
           })
         );
         grid.appendChild(card);

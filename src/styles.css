@@ -1763,3 +1763,18 @@ body.scratch-lock { overflow: hidden; }
   background: var(--accent);
   border-radius: 3px;
 }
+
+
+/* Overview cards are clickable now, so they should say so. */
+.module-card {
+  cursor: pointer;
+}
+
+.module-card:hover {
+  transform: translate(-1px, -1px);
+}
+
+.module-card:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 3px;
+}

@@ -1248,7 +1248,6 @@
         resizeRaf = 0;
       }
       ro.disconnect();
-      themeObs.disconnect();
       removeInlineInput();
     };
   }
