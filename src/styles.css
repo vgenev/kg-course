@@ -1408,3 +1408,103 @@ pre,
 .rail-phase-note {
   font-size: 0.74rem;
 }
+
+
+/* ------------------------------------------------------------
+   Typography roles inside an exercise
+   ------------------------------------------------------------
+   Three roles, never mixed: prose is the printed page (serif),
+   controls are written by hand (Neucha), values under inspection
+   are data (mono). The mismatch was controls inheriting prose and
+   options inheriting the old 1px row style.
+   ------------------------------------------------------------ */
+
+.exercise-meta {
+  font-family: var(--hand-sc);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.exercise-prompt {
+  font-family: var(--font);
+  font-size: 1.1rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+/* Controls */
+.option-row {
+  font-family: var(--hand);
+  font-size: 1.04rem;
+  line-height: 1.34;
+  padding: 0.5rem 0.8rem;
+  border: 2px solid var(--border);
+  border-radius: 2px 8px 3px 9px / 7px 2px 9px 3px;
+  background: var(--panel);
+  box-shadow: 2px 3px 0 var(--paper-shadow);
+  margin: 0.4rem 0;
+}
+
+.option-row:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 4px 0 var(--paper-shadow);
+  background: var(--bg-elevated);
+}
+
+.option-row:active {
+  transform: translate(1px, 2px);
+  box-shadow: 1px 1px 0 var(--paper-shadow);
+}
+
+/* The app marks the picked option with .selected only; correctness lives on
+   the verdict bar inside the same card, so colour the pick via :has(). */
+.option-row.selected {
+  border-color: var(--accent);
+  box-shadow: 2px 3px 0 var(--paper-shadow), inset 0 -3px 0 var(--accent);
+}
+
+.exercise-card:has(.verdict-bar.correct) .option-row.selected {
+  border-color: var(--correct);
+  box-shadow: 2px 3px 0 var(--paper-shadow), inset 0 -3px 0 var(--correct);
+}
+
+.exercise-card:has(.verdict-bar.wrong) .option-row.selected {
+  border-color: var(--wrong);
+  box-shadow: 2px 3px 0 var(--paper-shadow), inset 0 -3px 0 var(--wrong);
+}
+
+.option-row:disabled { cursor: default; opacity: 0.95; }
+.option-row:disabled:hover { transform: none; box-shadow: 2px 3px 0 var(--paper-shadow); }
+
+/* Values being classified read as data, not as prose or as a control. */
+.categorize-item > span,
+.check-row {
+  font-family: var(--mono);
+  font-size: 0.94rem;
+  letter-spacing: -0.01em;
+}
+
+.categorize-item {
+  border-bottom: 2px dotted var(--border);
+  padding: 0.55rem 0;
+}
+
+.bucket-btn {
+  font-family: var(--hand);
+  font-size: 0.98rem;
+}
+
+/* Feedback explanation is prose; the verdict line is a marginal note. */
+.feedback p,
+.feedback li {
+  font-family: var(--font);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.verdict-bar {
+  font-family: var(--hand-sc);
+  letter-spacing: 0.05em;
+}
