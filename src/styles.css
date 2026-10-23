@@ -1778,3 +1778,35 @@ body.scratch-lock { overflow: hidden; }
   outline: 2px dashed var(--accent);
   outline-offset: 3px;
 }
+
+
+/* ------------------------------------------------------------
+   Keep the header (and its Scratchpad toggle) in view while scrolling
+   ------------------------------------------------------------
+   It used to scroll away, so the toggle was unreachable mid-page — easy to
+   read as "the menu bar doesn't respond". The rail and pad columns offset
+   their sticky tops by the header height so nothing slides underneath.
+   ------------------------------------------------------------ */
+
+:root {
+  --header-h: 64px;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.rail {
+  top: var(--header-h);
+  max-height: calc(100dvh - var(--header-h));
+  overflow-y: auto;
+}
+
+@media (min-width: 1200px) {
+  .scratch-column {
+    top: var(--header-h);
+    height: calc(100dvh - var(--header-h));
+  }
+}
