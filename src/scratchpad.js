@@ -1237,12 +1237,6 @@
     const ro = new ResizeObserver(() => scheduleResize());
     ro.observe(canvasWrap);
 
-    const themeObs = new MutationObserver(() => redraw());
-    themeObs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
-
     if (!scratchPersistOk) showPersistFail();
 
     resize();

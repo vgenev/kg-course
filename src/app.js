@@ -51,7 +51,7 @@
   }
 
   function defaultState() {
-    return { v: 1, rec: {}, log: [], theme: 'light', scratchOpen: false };
+    return { v: 1, rec: {}, log: [], scratchOpen: false };
   }
 
   function loadState() {
@@ -64,7 +64,6 @@
             v: 1,
             rec: parsed.rec || {},
             log: Array.isArray(parsed.log) ? parsed.log : [],
-            theme: parsed.theme === 'dark' ? 'dark' : 'light',
             scratchOpen: !!parsed.scratchOpen,
           };
         }
@@ -72,7 +71,6 @@
     } catch (_) {
       persistOk = false;
     }
-    document.documentElement.setAttribute('data-theme', state.theme);
   }
 
   function saveState() {
@@ -1062,11 +1060,9 @@
             v: 1,
             rec: parsed.rec || {},
             log: parsed.log || [],
-            theme: parsed.theme === 'dark' ? 'dark' : 'light',
             scratchOpen: !!parsed.scratchOpen,
           };
-          document.documentElement.setAttribute('data-theme', state.theme);
-          saveState();
+                saveState();
           render();
         } catch (_) {
           alert('Could not read that file.');
@@ -1083,8 +1079,7 @@
         onClick: () => {
           if (!confirm('Clear all progress on this machine?')) return;
           state = defaultState();
-          document.documentElement.setAttribute('data-theme', state.theme);
-          saveState();
+                saveState();
           render();
         },
       })
@@ -1135,20 +1130,9 @@
         text: 'Mastery ' + om + '%',
       })
     );
-    const themeBtn = el('button', {
-      type: 'button',
-      className: 'btn-theme',
-      text: state.theme === 'dark' ? 'Light mode' : 'Dark mode',
-    });
-    themeBtn.addEventListener('click', () => {
-      state.theme = state.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', state.theme);
-      saveState();
-      render();
-    });
     const scratchBtn = el('button', {
       type: 'button',
-      className: 'btn-theme btn-scratch',
+      className: 'btn-pad btn-scratch',
       text: 'Scratchpad',
       'aria-pressed': state.scratchOpen ? 'true' : 'false',
     });
@@ -1158,7 +1142,6 @@
       render();
     });
     header.appendChild(scratchBtn);
-    header.appendChild(themeBtn);
     root.appendChild(header);
 
     const shellClass =

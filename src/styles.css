@@ -1,9 +1,7 @@
 /* Paper palette. Default surface is warm paper with ink borders, a blue-pen
    accent, and pencil-red for errors. Night is the same ink language inverted
    (chalk on a dark board), not a different design. */
-:root,
-:root[data-theme='paper'],
-:root[data-theme='light'] {
+:root {
   --bg: #f6f2e9;
   --bg-elevated: #fffdf6;
   --bg-rail: #f1ebdf;
@@ -27,25 +25,6 @@
   --mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
-:root[data-theme='dark'] {
-  --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
-    Georgia, 'Times New Roman', serif;
-  --bg: #1b1a18;
-  --bg-elevated: #232220;
-  --bg-rail: #201f1c;
-  --border: #c9c1b0;
-  --text: #eae4d6;
-  --text-muted: #a49c8b;
-  --accent: #7fb2f0;
-  --accent-hover: #a6cbf7;
-  --correct: #8fbf6e;
-  --wrong: #e8837a;
-  --panel: #232220;
-  --sample-bg: #262420;
-  --instructions-bg: #2a2b22;
-  --focus-ring: rgba(127, 178, 240, 0.35);
-  --paper-shadow: rgba(0, 0, 0, 0.45);
-}
 
 *,
 *::before,
@@ -103,7 +82,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.btn-theme {
+.btn-pad {
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
@@ -113,7 +92,7 @@ body {
   font-size: 0.85rem;
 }
 
-.btn-theme:hover {
+.btn-pad:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -1079,7 +1058,7 @@ h1 { line-height: 1.15; }
 button,
 .btn-check,
 .btn-secondary,
-.btn-theme,
+.btn-pad,
 .btn-copy,
 .btn-scratch,
 .scratch-tool-btn,
@@ -1099,7 +1078,7 @@ button,
 button:hover,
 .btn-check:hover,
 .btn-secondary:hover,
-.btn-theme:hover,
+.btn-pad:hover,
 .btn-copy:hover,
 .btn-scratch:hover,
 .scratch-tool-btn:hover,
@@ -1268,47 +1247,6 @@ input:focus,
   box-shadow: 1px 2px 0 var(--paper-shadow);
 }
 
-/* Dark theme: the paper goes to a chalkboard, so shadows read as lift,
-   not as ink bleed. */
-:root[data-theme='dark'] body {
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px),
-    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px);
-}
-
-:root[data-theme='dark'] .module-card,
-:root[data-theme='dark'] .exercise-card,
-:root[data-theme='dark'] .instructions-panel,
-:root[data-theme='dark'] .sample-text,
-:root[data-theme='dark'] .feedback,
-:root[data-theme='dark'] .completion-strip,
-:root[data-theme='dark'] .review-row,
-:root[data-theme='dark'] .log-table,
-:root[data-theme='dark'] .scratch-widget,
-:root[data-theme='dark'] .stats-row,
-:root[data-theme='dark'] .empty-state,
-:root[data-theme='dark'] .rail,
-:root[data-theme='dark'] .scratch-canvas-wrap,
-:root[data-theme='dark'] button {
-  box-shadow: 2px 3px 0 var(--paper-shadow);
-}
-
-
-/* ------------------------------------------------------------
-   Paper pass 2: measured fixes
-   ------------------------------------------------------------
-   The rail overflowed its box (scrollWidth 296 vs clientWidth 218): the
-   label was a flex row, so a long part title could not wrap and the meter
-   could not shrink. Body text also reads better as print than as UI sans.
-   ------------------------------------------------------------ */
-
-.rail,
-.rail-nav { overflow-x: hidden; }
-
-.rail-item {
-  overflow: hidden;
-  padding: 0.5rem 0.6rem;
-}
 
 .rail-item-label {
   display: block;
@@ -1343,7 +1281,7 @@ input:focus,
 button,
 .btn-check,
 .btn-secondary,
-.btn-theme,
+.btn-pad,
 .btn-copy,
 .btn-scratch,
 .scratch-tool-btn,
