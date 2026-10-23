@@ -1508,3 +1508,22 @@ pre,
   font-family: var(--hand-sc);
   letter-spacing: 0.05em;
 }
+
+
+/* Lesson prose is the thing being read: serif, never the hand face.
+   Headings keep the hand, so the page still reads as a marked-up workbook. */
+.lesson,
+.lesson p,
+.lesson li,
+.lesson blockquote,
+.instructions-panel p,
+.instructions-panel li,
+.completion-strip p {
+  font-family: var(--font);
+}
+
+.lesson h2,
+.lesson h3,
+.instructions-panel h2 {
+  font-family: var(--hand);
+}
