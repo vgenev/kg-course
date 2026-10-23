@@ -1607,3 +1607,102 @@ body.scratch-lock { overflow: hidden; }
   inset: 0;
   display: block;
 }
+
+
+/* ------------------------------------------------------------
+   Icon toolbar + the option-row overflow
+   ------------------------------------------------------------ */
+
+/* papercss stacks buttons with a 32px left margin from the second sibling on.
+   With width:100% that pushed the 2nd–4th multiple-choice options ~10px past
+   the card's right border. Zeroed here with enough specificity to win. */
+.exercise-controls .option-row,
+.exercise-controls .bucket-btn,
+.exercise-card .option-row {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.scratch-toolbar {
+  gap: 0.3rem;
+}
+
+.scratch-tool-btn {
+  width: 32px;
+  height: 30px;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.scratch-tool-btn svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+  pointer-events: none;
+}
+
+.scratch-tool-btn:hover svg { transform: scale(1.06); }
+.scratch-tool-btn:active svg { transform: scale(0.96); }
+
+/* The three swatches are controls too: round pen tips with an ink ring. */
+.scratch-swatch {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  margin: 0 0.1rem;
+  box-shadow: 1px 2px 0 var(--paper-shadow);
+}
+
+.scratch-swatch[aria-pressed='true'] {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tooltips on hover with the label underneath, for the icons that are not
+   self-evident (edge vs node). Pure CSS, no JS. */
+.scratch-tool-btn:hover::after,
+.scratch-tool-btn:focus-visible::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  font-family: var(--hand);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 2px 6px 3px 7px;
+  pointer-events: none;
+  z-index: 90;
+}
+
+.scratch-toolbar { position: relative; }
+.scratch-tool-btn { position: relative; }
+
+/* Swatches must be square or 50% radius draws an ellipse. */
+.scratch-swatch {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  max-width: 18px;
+  flex: 0 0 18px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* .scratch-toolbar button (0,1,1) was setting swatch padding; two classes win. */
+.scratch-toolbar .scratch-swatch {
+  padding: 0;
+  border-radius: 50%;
+}

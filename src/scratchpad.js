@@ -251,6 +251,30 @@
     return hits[0];
   }
 
+
+  /* Hand-drawn icon set: 1.7px stroke, round caps, no fills. Sized by CSS. */
+  const ICONS = {
+    pen: '<path d="M3.2 15.2 4.4 11 12.9 2.5a1.7 1.7 0 0 1 2.4 2.4L6.8 13.4 3.2 15.2Z"/><path d="M11.6 3.8 14.6 6.8"/>',
+    node: '<rect x="3.2" y="5" width="11.6" height="8" rx="2.2"/><path d="M6.4 9h5.2"/>',
+    edge: '<circle cx="4.6" cy="13.4" r="1.9"/><circle cx="13.4" cy="4.6" r="1.9"/><path d="M6.2 11.8 11.8 6.2"/>',
+    text: '<path d="M3.8 5h10.4"/><path d="M9 5v10.2"/><path d="M6.6 15.2h4.8"/>',
+    eraser: '<path d="M4.2 12.1 11 5.3a1.6 1.6 0 0 1 2.3 0l1.4 1.4a1.6 1.6 0 0 1 0 2.3l-5 5H6.4L4.2 12.1Z"/><path d="M7.4 8.9 11.9 13.4"/><path d="M5 15.6h10"/>',
+    undo: '<path d="M4.4 8.9a5.6 5.6 0 1 1 1.5 5.4"/><path d="M4.2 4.2v4.9h4.9"/>',
+    clear: '<path d="M3.8 5.6h10.4"/><path d="M7.4 5.6V3.9h3.2v1.7"/><path d="M5.6 5.6 6.4 15h5.2l.8-9.4"/>',
+    save: '<path d="M9 3.2v7.6"/><path d="M5.8 8 9 11.2 12.2 8"/><path d="M4 14.4h10"/>',
+    expand: '<path d="M4 7.2V4h3.2"/><path d="M14 7.2V4h-3.2"/><path d="M4 10.8V14h3.2"/><path d="M14 10.8V14h-3.2"/>',
+    collapse: '<path d="M7.2 4v3.2H4"/><path d="M10.8 4v3.2H14"/><path d="M7.2 14v-3.2H4"/><path d="M10.8 14v-3.2H14"/>',
+  };
+
+  function iconSvg(name) {
+    return (
+      '<svg viewBox="0 0 18 18" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      (ICONS[name] || '') +
+      '</svg>'
+    );
+  }
+
   function mount(container, padKey) {
     container.innerHTML = '';
     const data = padData(padKey);
@@ -291,27 +315,31 @@
       });
     }
 
-    function makeToolBtn(label, t) {
+    function makeToolBtn(icon, t, label) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'scratch-tool-btn';
-      b.textContent = label;
+      b.innerHTML = iconSvg(icon);
       b.setAttribute('data-tool', t);
+      b.setAttribute('aria-label', label);
+      b.setAttribute('title', label);
       b.setAttribute('aria-pressed', t === tool ? 'true' : 'false');
       b.addEventListener('click', () => setTool(t));
       return b;
     }
 
-    toolbar.appendChild(makeToolBtn('Pen', 'pen'));
-    toolbar.appendChild(makeToolBtn('Node', 'node'));
-    toolbar.appendChild(makeToolBtn('Edge', 'edge'));
-    toolbar.appendChild(makeToolBtn('Text', 'text'));
-    toolbar.appendChild(makeToolBtn('Eraser', 'eraser'));
+    toolbar.appendChild(makeToolBtn('pen', 'pen', 'Pen'));
+    toolbar.appendChild(makeToolBtn('node', 'node', 'Node'));
+    toolbar.appendChild(makeToolBtn('edge', 'edge', 'Edge'));
+    toolbar.appendChild(makeToolBtn('text', 'text', 'Text'));
+    toolbar.appendChild(makeToolBtn('eraser', 'eraser', 'Eraser'));
 
     const undoBtn = document.createElement('button');
     undoBtn.type = 'button';
     undoBtn.className = 'scratch-tool-btn';
-    undoBtn.textContent = 'Undo';
+    undoBtn.innerHTML = iconSvg('undo');
+    undoBtn.setAttribute('aria-label', 'Undo');
+    undoBtn.setAttribute('title', 'Undo');
     undoBtn.addEventListener('click', () => {
       const hist = history[padKey];
       if (!hist.length) return;
@@ -336,7 +364,9 @@
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'scratch-tool-btn';
-    clearBtn.textContent = 'Clear';
+    clearBtn.innerHTML = iconSvg('clear');
+    clearBtn.setAttribute('aria-label', 'Clear pad');
+    clearBtn.setAttribute('title', 'Clear pad');
     clearBtn.addEventListener('click', () => {
       if (!confirm('Clear this scratchpad?')) return;
       data.strokes = [];
@@ -373,7 +403,9 @@
     const saveBtn = document.createElement('button');
     saveBtn.type = 'button';
     saveBtn.className = 'scratch-tool-btn';
-    saveBtn.textContent = 'Save PNG';
+    saveBtn.innerHTML = iconSvg('save');
+    saveBtn.setAttribute('aria-label', 'Save as PNG');
+    saveBtn.setAttribute('title', 'Save as PNG');
     saveBtn.addEventListener('click', () => savePng(padKey));
     toolbar.appendChild(saveBtn);
 
@@ -382,7 +414,9 @@
     const fsBtn = document.createElement('button');
     fsBtn.type = 'button';
     fsBtn.className = 'scratch-tool-btn scratch-fs-btn';
-    fsBtn.textContent = 'Full screen';
+    fsBtn.innerHTML = iconSvg('expand');
+    fsBtn.setAttribute('aria-label', 'Full screen');
+    fsBtn.setAttribute('title', 'Full screen (Esc to leave)');
     fsBtn.setAttribute('aria-pressed', 'false');
     fsBtn.addEventListener('click', () => toggleFullscreen());
     toolbar.appendChild(fsBtn);
@@ -395,7 +429,9 @@
       const next = typeof force === 'boolean' ? force : !isFullscreen();
       wrap.classList.toggle('scratch-full', next);
       document.body.classList.toggle('scratch-lock', next);
-      fsBtn.textContent = next ? 'Exit (Esc)' : 'Full screen';
+      fsBtn.innerHTML = iconSvg(next ? 'collapse' : 'expand');
+      fsBtn.setAttribute('aria-label', next ? 'Exit full screen' : 'Full screen');
+      fsBtn.setAttribute('title', next ? 'Exit full screen (Esc)' : 'Full screen');
       fsBtn.setAttribute('aria-pressed', next ? 'true' : 'false');
       // Layout changes synchronously, so measure after the class lands.
       requestAnimationFrame(() => {
