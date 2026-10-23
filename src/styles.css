@@ -1824,4 +1824,6 @@ body.scratch-lock { overflow: hidden; }
   width: 100%;
   min-height: 0;
   height: auto;
+  /* The inline mount caps the pad at 60vh; in fullscreen it must not. */
+  max-height: none;
 }
