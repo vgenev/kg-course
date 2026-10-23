@@ -116,10 +116,6 @@
     return mean;
   }
 
-  function meterOnCount(mean) {
-    return Math.round(mean * 8);
-  }
-
   function overallMastery() {
     const all = allExercises();
     if (!all.length) return 0;
@@ -924,12 +920,16 @@
   }
 
   function railMeter(mean) {
-    const on = meterOnCount(mean);
-    const segs = [];
-    for (let i = 0; i < 8; i++) {
-      segs.push(el('div', { className: 'meter-seg' + (i < on ? ' on' : '') }));
-    }
-    return el('div', { className: 'meter' }, segs);
+    const pct = Math.round(Math.max(0, Math.min(1, mean)) * 100);
+    const meter = el('div', {
+      className: 'meter' + (pct > 0 ? ' has-fill' : ''),
+      role: 'img',
+      'aria-label': 'Mastery ' + pct + '%',
+    });
+    const fill = el('div', { className: 'meter-fill' });
+    fill.style.width = pct + '%';
+    meter.appendChild(fill);
+    return meter;
   }
 
   function renderRail(root) {

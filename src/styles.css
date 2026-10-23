@@ -1730,3 +1730,36 @@ body.scratch-lock { overflow: hidden; }
   width: 34px;
   height: 32px;
 }
+
+
+/* ------------------------------------------------------------
+   Rail meter: one thin bar instead of eight dots
+   ------------------------------------------------------------
+   Eight segments per module read as a dotted trail and made the rail noisy.
+   A single 4px bar carries the same information, and its width is a share of
+   a fixed 64px box so it never depends on the viewport.
+   ------------------------------------------------------------ */
+
+.rail-item .meter {
+  position: relative;
+  display: block;
+  width: 64px;
+  max-width: 64px;
+  height: 4px;
+  min-height: 4px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--border);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.rail-item .meter.has-fill {
+  opacity: 1;
+}
+
+.rail-item .meter-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
